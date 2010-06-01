@@ -1,0 +1,9 @@
+ * codificar levels DONE
+ * ler levels DONE
+ * aprender a usar boost
+ * colocar num grafo da boost
+ * floid warshall da boost
+ * a*
+ * heurística de pegar os menores
+ * match
+ 
