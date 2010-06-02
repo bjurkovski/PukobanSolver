@@ -1,10 +1,11 @@
 #include <iostream>
+#include <cstdio>
+#include <cstdlib>
+#include <cassert>
 
 using namespace std;
 
 #define MAX_SIZE 10
-
-static const char input_codes[] = ".*-#+!@"
 
 typedef enum eCode {
 	EMPTY,
@@ -16,6 +17,8 @@ typedef enum eCode {
 	TARGET,
 	NCODES
 } Code;
+
+static const char input_codes[NCODES + 1] = ".*-#+!@";
 
 #define PUKOBAN 1
 
@@ -37,7 +40,7 @@ void Board::print()
 	int i, j;
 	for(i = 0; i < m; i++) {
 		for(j = 0; j < n; j++)
-			printf("%i ", board[i][j]);
+			printf("%c", input_codes[board[i][j]]);
 		printf("\n");
 	}
 	printf("\n");
@@ -49,7 +52,7 @@ void Board::read()
 	int i = 0, j;
 	while(cin >> line) {
 		n = line.size();
-		cout << i << ' ' << line << endl;
+		//cout << line << endl;
 		for(j = 0; j < (int) line.size(); j++) {
 			board[i][j] = meaning(line[j]);
 		}
@@ -60,12 +63,11 @@ void Board::read()
 
 int Board::meaning(char c)
 {
-	switch(c) {
-		case PUKOBAN_CHAR:
-			return PUKOBAN;
-		default:
-			return 0;
+	for(int i = 0; i < NCODES; i++) {
+		if(input_codes[i] == c)
+			return i;
 	}
+	return -1;
 }
 
 
@@ -76,7 +78,7 @@ int main(int argc, char **argv)
 		printf("Usage: %s <file_name>\n", argv[0]);
 		exit(1);
 	}
-	freopen(argv[1], "r", stdin);
+	assert(freopen(argv[1], "r", stdin));
 	b.read();
 	b.print();
 	return 0;

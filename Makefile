@@ -54,8 +54,8 @@ endif
 
 ifeq ($(HASCOLOR),true)
 ifneq ($(COLOR), false)
-CXX := $(addprefix colorgcc , $(CXX))
-CC := $(addprefix colorgcc , $(CC)) 
+#CXX := $(addprefix colorgcc , $(CXX))
+#CC := $(addprefix colorgcc , $(CC)) 
 endif
 endif
 
@@ -162,6 +162,7 @@ $(DYNLIB): $(OBJS) $(LINKWITH)
 
 clean_executable: cleanobj
 	rm -f $(EXECUTABLE)
+	rm -f *~
 
 objects: $(OBJS)
 
