@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cassert>
+#include <cstring>
 
 using namespace std;
 
@@ -26,8 +27,6 @@ enum {
 
 typedef int Code;
 static const char input_codes[NCODES + 1] = ".*-#+!@";
-
-#define PUKOBAN 1
 
 enum {
 	UP,
@@ -51,7 +50,7 @@ bool isPull(Move m) {
 class State
 {
 public:
-	State() : m(0), n(0), pukoX(0), pukoY(0) { };
+	State() : m(0), n(0), pukoX(0), pukoY(0), f(0), g(0) { };
 	void read();
 	void print();
 	static Code meaning(char c);
@@ -62,16 +61,16 @@ public:
 private:
 	int m, n;
 	int pukoX, pukoY;
+	int f, g;
 	Code board[MAX_SIZE][MAX_SIZE];
-	bool insideBoard(int posX, int posY);
 };
 
 void State::print()
 {
 	int i, j;
-	for(i = 0; i < m; i++) {
-		for(j = 0; j < n; j++)
-			printf("%c", input_codes[board[i][j]]);
+	for(i = 0; i <= m + 1; i++) {
+		for(j = 0; j <= n + 1; j++)
+			printf("%c", i == pukoX && j == pukoY ? board[i][j] == EMPTY ? input_codes[PKB] : input_codes[PKB_OVER_TARGET]  : input_codes[board[i][j]]);
 		printf("\n");
 	}
 	printf("\n");
@@ -80,20 +79,30 @@ void State::print()
 void State::read()
 {
 	string line;
-	int i = 0, j;
+	int i = 1, j;
 	while(cin >> line) {
 		n = line.size();
 		//cout << line << endl;
-		for(j = 0; j < (int) line.size(); j++) {
-			board[i][j] = meaning(line[j]);
+		for(j = 1; j <= n; j++) {
+			board[i][j] = meaning(line[j - 1]);
 			if(board[i][j] == PKB || board[i][j] == PKB_OVER_TARGET) {
+				if(board[i][j] == PKB) board[i][j] = EMPTY;
+				else board[i][j] = TARGET;
 				pukoX = i;
 				pukoY = j;
 			}
 		}
 		i++;
 	}
-	m = i;
+	m = i - 1;
+
+	assert(m + 1 < MAX_SIZE && n + 1 < MAX_SIZE);
+
+	for(i = 0; i <= m + 1; i++)
+		board[i][0] = board[i][n + 1] = WALL;
+
+	for(j = 0; j <= n + 1; j++)
+		board[0][j] = board[m + 1][j] = WALL;
 }
 
 Code State::meaning(char c)
@@ -102,6 +111,7 @@ Code State::meaning(char c)
 		if(input_codes[i] == c)
 			return (Code)i;
 	}
+	printf("'%c'\n", c);
 	assert(false);
 	/* ERROR_CODE = -1 dá pau no print na hora de acessar a string */
 	return ERROR_CODE;
@@ -111,16 +121,14 @@ State& State::operator=(const State& b)
 {
 	m = b.m;
 	n = b.n;
-	for(int i=0; i<m; i++)
-		for(int j=0; j<n; j++)
-			board[i][j] = b.board[i][j];
+	memcpy(board, b.board, sizeof(board));
 	return *this;
 }
 
 bool State::isGoal()
 {
-	for(int i=0; i<m; i++)
-		for(int j=0; j<n; j++)
+	for(int i=1; i<=m; i++)
+		for(int j=1; j<=n; j++)
 			if(board[i][j] == BOX)
 				return false;
 	return true;
@@ -131,20 +139,15 @@ bool State::canMove(Move move)
 	int nextX = pukoX + moves[move][X];
 	int nextY = pukoY + moves[move][Y];
 
-	if(!insideBoard(nextX, nextY))
-		return false;
-		
 	if(board[nextX][nextY] == WALL)
 		return false;
 		
 	if(!isPull(move)) {
+		// fazer isBox()
 		if(board[nextX][nextY] == BOX || board[nextX][nextY] == BOX_OVER_TARGET) {
 			int nextNextX = nextX + moves[move][X];
 			int nextNextY = nextY + moves[move][Y];
 			
-			if(!insideBoard(nextNextX, nextNextY))
-				return false;
-				
 			if(board[nextNextX][nextNextY] == WALL || board[nextNextX][nextNextY] == BOX || board[nextNextX][nextNextY] == BOX_OVER_TARGET)
 				return false;
 		}
@@ -152,9 +155,6 @@ bool State::canMove(Move move)
 	else {
 		int boxX = pukoX - moves[move][X];
 		int boxY = pukoY - moves[move][Y];
-		
-		if(!insideBoard(boxX, boxY))
-			return false;
 		
 		if(board[boxX][boxY] != BOX && board[boxX][boxY] != BOX_OVER_TARGET)
 			return false;
@@ -166,13 +166,7 @@ bool State::canMove(Move move)
 	return true;
 }
 
-bool State::insideBoard(int posX, int posY) {
-	if(posX < 0 || posY < 0 || posX >= m || posY >= n)
-		return false;
-	return true;
-}
-
-#if 0
+#if 1
 //*
 list<Move> a_star(const State& start)
 {
