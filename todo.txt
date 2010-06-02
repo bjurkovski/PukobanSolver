@@ -1,12 +1,16 @@
  * codificar levels DONE
  * ler levels DONE
+ * a*
+ * heurística de pegar os menores
+ * pesquisa bibliográfica
+ * determinar
+   * número de movimentos
+	 * branching factor (min, max, médio)
  * aprender a usar boost
    * download da 1_43_0
 	 * ./bootstrap.sh
 	 * sudo ./bjam install
  * colocar num grafo da boost
  * floid warshall da boost
- * a*
- * heurística de pegar os menores
  * match
  

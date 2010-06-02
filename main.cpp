@@ -102,6 +102,8 @@ Code State::meaning(char c)
 		if(input_codes[i] == c)
 			return (Code)i;
 	}
+	assert(false);
+	/* ERROR_CODE = -1 dá pau no print na hora de acessar a string */
 	return ERROR_CODE;
 }
 
