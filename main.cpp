@@ -16,18 +16,18 @@ using namespace std;
 
 enum {
 	ERROR_CODE=-1,
-	EMPTY,
+	EMPTY = 0,
+	TARGET = 1,
+	BOX,
+	BOX_OVER_TARGET,
 	PKB,
 	PKB_OVER_TARGET,
 	WALL,
-	BOX,
-	BOX_OVER_TARGET,
-	TARGET,
 	NCODES
 };
 
 typedef int Code;
-static const char input_codes[NCODES + 1] = ".*-#+!@";
+static const char input_codes[NCODES + 1] = ".@+!*-#";
 
 enum {
 	UP,
@@ -53,12 +53,13 @@ class State
 public:
 	State() : f(0), g(0), m(0), n(0), pukoX(0), pukoY(0) { };
 	void read();
-	void print();
+	void print() const;
 	static Code meaning(char c);
-	State& operator=(const State& b);
+	const State& operator=(const State& b);
 	bool operator<(const State& b) const;
 	bool isGoal();
 	bool canMove(Move move);
+	void apply(Move move, State& child);
 
 	friend class lessF;
 
@@ -78,7 +79,7 @@ public:
 	}
 };
 
-void State::print()
+void State::print() const
 {
 	int i, j;
 	for(i = 0; i <= m + 1; i++) {
@@ -86,6 +87,7 @@ void State::print()
 			printf("%c", i == pukoX && j == pukoY ? board[i][j] == EMPTY ? input_codes[PKB] : input_codes[PKB_OVER_TARGET]  : input_codes[board[i][j]]);
 		printf("\n");
 	}
+	printf("f: %5i\tg: %5i", f, g);
 	printf("\n");
 }
 
@@ -130,10 +132,12 @@ Code State::meaning(char c)
 	return ERROR_CODE;
 }
 
-State& State::operator=(const State& b)
+const State& State::operator=(const State& b)
 {
 	m = b.m;
 	n = b.n;
+	f = b.f;
+	g = b.g;
 	memcpy(board, b.board, sizeof(board));
 	return *this;
 }
@@ -148,7 +152,8 @@ bool State::operator<(const State& b) const
 		for(int j = 1; j <= n; j++)
 			if(board[i][j] < b.board[i][j]) return true;
 			else if(board[i][j] > b.board[i][j]) return false;
-	assert(false);
+	//assert(false); não deveria chegar aqui, mas chega
+	return true;
 }
 
 bool State::isGoal()
@@ -192,6 +197,34 @@ bool State::canMove(Move move)
 	return true;
 }
 
+void State::apply(Move move, State& child)
+{
+	child = *this;
+	int nextX = pukoX + moves[move][X];
+	int nextY = pukoY + moves[move][Y];
+
+	if(!isPull(move)) {
+		// fazer isBox()
+		if(board[nextX][nextY] == BOX || board[nextX][nextY] == BOX_OVER_TARGET) {
+			int nextNextX = nextX + moves[move][X];
+			int nextNextY = nextY + moves[move][Y];
+			child.board[nextX][nextY] -= BOX;
+			child.board[nextNextX][nextNextY] += BOX;
+		}
+	}
+	else {
+		int boxX = pukoX - moves[move][X];
+		int boxY = pukoY - moves[move][Y];
+
+		child.board[boxX][boxY] -= BOX;
+		child.board[pukoX][pukoY] += BOX;
+	}
+
+	child.pukoX = nextX;
+	child.pukoY = nextY;
+	child.f = f + 1;
+}
+
 list<Move> a_star(const State& start)
 {
 	priority_queue<State, vector<State>, lessF> open;
@@ -200,13 +233,21 @@ list<Move> a_star(const State& start)
 	while(!open.empty()) {
 		State best = open.top();
 		open.pop();
+		best.print();
 		for(int m=0; m<NMOVES; m++) {
+			printf("m: %i\n", m);
 			if(best.canMove((Move)m)) {
-				State child; // = best.apply(m);
-				if (child.isGoal())
+				printf("canMove()\n");
+				State child;
+				best.apply(m, child);
+				if (child.isGoal()) {
+					printf("isGoal()\n");
+					child.print();
 					return list<Move>(0,0); //return solution;
+				}
 				set<State>::iterator cached = states.find(child);
 				if(cached == states.end() || cached->g > child.g) {
+					printf("Inserting\n");
 					states.insert(child);
 					open.push(child);
 				}
@@ -226,6 +267,7 @@ int main(int argc, char **argv)
 	assert(freopen(argv[1], "r", stdin));
 	b.read();
 	b.print();
+	a_star(b);
 	return 0;
 }
 

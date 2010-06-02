@@ -1,7 +1,10 @@
  * codificar levels DONE
  * ler levels DONE
- * a*
+ * a* DONE
  * heurística de pegar os menores
+   * implementar bfs no grafo implícito
+	 * salvar numa matriz a menor distância de cada quadrado para um target
+	 * atribuir isso para o g na função apply
  * pesquisa bibliográfica
  * determinar
    * número de movimentos
