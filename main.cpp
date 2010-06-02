@@ -10,6 +10,7 @@
 using namespace std;
 
 #define MAX_SIZE 10
+
 #define X 0
 #define Y 1
 
@@ -41,7 +42,7 @@ enum {
 };
 
 typedef int Move;
-static const int moves[NMOVES/2][2] = {{0,1}, {-1,0}, {0,-1}, {1,0}};
+static const int moves[NMOVES][2] = {{0,1}, {-1,0}, {0,-1}, {1,0}, {0,1}, {-1,0}, {0,-1}, {1,0}};
 
 bool isPull(Move m) {
 	return (m >= PULL_UP);
@@ -50,19 +51,31 @@ bool isPull(Move m) {
 class State
 {
 public:
-	State() : m(0), n(0), pukoX(0), pukoY(0), f(0), g(0) { };
+	State() : f(0), g(0), m(0), n(0), pukoX(0), pukoY(0) { };
 	void read();
 	void print();
 	static Code meaning(char c);
 	State& operator=(const State& b);
+	bool operator<(const State& b) const;
 	bool isGoal();
 	bool canMove(Move move);
+
+	friend class lessF;
+
+	int f, g;
 
 private:
 	int m, n;
 	int pukoX, pukoY;
-	int f, g;
 	Code board[MAX_SIZE][MAX_SIZE];
+};
+
+class lessF
+{
+public:
+	bool operator()(const State& l, const State& r) {
+		return l.f < r.f;
+	}
 };
 
 void State::print()
@@ -125,6 +138,19 @@ State& State::operator=(const State& b)
 	return *this;
 }
 
+bool State::operator<(const State& b) const
+{
+	if(pukoX < b.pukoX) return true;
+	if(pukoX > b.pukoX) return false;
+	if(pukoY < b.pukoY) return true;
+	if(pukoY > b.pukoY) return false;
+	for(int i = 1; i <= m; i++)
+		for(int j = 1; j <= n; j++)
+			if(board[i][j] < b.board[i][j]) return true;
+			else if(board[i][j] > b.board[i][j]) return false;
+	assert(false);
+}
+
 bool State::isGoal()
 {
 	for(int i=1; i<=m; i++)
@@ -166,11 +192,9 @@ bool State::canMove(Move move)
 	return true;
 }
 
-#if 1
-//*
 list<Move> a_star(const State& start)
 {
-	priority_queue<State> open;
+	priority_queue<State, vector<State>, lessF> open;
 	set<State> states;
 	open.push(start);
 	while(!open.empty()) {
@@ -178,20 +202,19 @@ list<Move> a_star(const State& start)
 		open.pop();
 		for(int m=0; m<NMOVES; m++) {
 			if(best.canMove((Move)m)) {
-				State child;// = best.apply(m);
+				State child; // = best.apply(m);
 				if (child.isGoal())
 					return list<Move>(0,0); //return solution;
-				/*State*/set<State>::iterator cached = states.find(child);
-				if(1){//if (cached == states.end() || cached.g > child.g) {
+				set<State>::iterator cached = states.find(child);
+				if(cached == states.end() || cached->g > child.g) {
 					states.insert(child);
 					open.push(child);
 				}
 			}
 		}
 	}
+	return list<Move>(0, 0);
 }
-//*/
-#endif
 
 int main(int argc, char **argv)
 {
