@@ -4,7 +4,7 @@
  * heurística de pegar os menores
    * implementar bfs no grafo implícito
 	 * salvar numa matriz a menor distância de cada quadrado para um target
-	 * atribuir isso para o g na função apply
+	 * atribuir isso para o h na função apply
  * pesquisa bibliográfica
  * determinar
    * número de movimentos
@@ -14,6 +14,5 @@
 	 * ./bootstrap.sh
 	 * sudo ./bjam install
  * colocar num grafo da boost
- * floid warshall da boost
+ * floyd warshall da boost
  * match
- 

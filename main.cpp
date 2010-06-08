@@ -10,7 +10,8 @@
 using namespace std;
 
 #define MAX_SIZE 10
-#define SLEEP_TIME 10
+#define SLEEP_TIME 0//3
+#define DEBUG
 
 #define X 0
 #define Y 1
@@ -45,9 +46,15 @@ enum {
 
 typedef int Move;
 static const int moves[NMOVES][2] = {{0,1}, {-1,0}, {0,-1}, {1,0}, {0,1}, {-1,0}, {0,-1}, {1,0}};
+static const char moveStrings[NMOVES][30] = {"Going right", "Going up", "Going left", "Going down",
+											  "Pulling right", "Pulling up", "Pulling left", "Pulling down"};
 
 bool isPull(Move m) {
 	return (m >= PULL_UP);
+}
+
+bool isBox(Code c) {
+	return (c == BOX || c == BOX_OVER_TARGET);
 }
 
 class State
@@ -66,7 +73,7 @@ public:
 	friend class lessF;
 
 	int f, g, h;
-
+	list<Move> trace;
 private:
 	int m, n;
 	int pukoX, pukoY;
@@ -77,7 +84,7 @@ class lessF
 {
 public:
 	bool operator()(const State& l, const State& r) {
-		return l.f < r.f;
+		return l.f > r.f;
 	}
 };
 
@@ -166,6 +173,8 @@ const State& State::operator=(const State& b)
 	f = b.f;
 	g = b.g;
 	h = b.h;
+	pukoX = b.pukoX;
+	pukoY = b.pukoY;
 	memcpy(board, b.board, sizeof(board));
 	return *this;
 }
@@ -200,28 +209,31 @@ bool State::canMove(Move move)
 
 	if(board[nextX][nextY] == WALL)
 		return false;
-		
+
 	if(!isPull(move)) {
-		// fazer isBox()
-		if(board[nextX][nextY] == BOX || board[nextX][nextY] == BOX_OVER_TARGET) {
+		//if(board[nextX][nextY] == BOX || board[nextX][nextY] == BOX_OVER_TARGET) {
+		if(isBox(board[nextX][nextY])) {
 			int nextNextX = nextX + moves[move][X];
 			int nextNextY = nextY + moves[move][Y];
-			
-			if(board[nextNextX][nextNextY] == WALL || board[nextNextX][nextNextY] == BOX || board[nextNextX][nextNextY] == BOX_OVER_TARGET)
+
+			//if(board[nextNextX][nextNextY] == WALL || board[nextNextX][nextNextY] == BOX || board[nextNextX][nextNextY] == BOX_OVER_TARGET)
+			if(board[nextNextX][nextNextY] == WALL || isBox(board[nextNextX][nextNextY]))
 				return false;
 		}
 	}
 	else {
 		int boxX = pukoX - moves[move][X];
 		int boxY = pukoY - moves[move][Y];
-		
-		if(board[boxX][boxY] != BOX && board[boxX][boxY] != BOX_OVER_TARGET)
+
+		//if(board[boxX][boxY] != BOX && board[boxX][boxY] != BOX_OVER_TARGET)
+		if(!isBox(board[boxX][boxY]))
 			return false;
-			
-		if(board[nextX][nextY] == BOX || board[nextX][nextY] == BOX_OVER_TARGET)
+
+		//if(board[nextX][nextY] == BOX || board[nextX][nextY] == BOX_OVER_TARGET)
+		if(isBox(board[nextX][nextY]))
 			return false;
 	}
-	
+
 	return true;
 }
 
@@ -250,49 +262,89 @@ void State::apply(Move move, State& child)
 
 	child.pukoX = nextX;
 	child.pukoY = nextY;
-	child.h = h + 1;
-	child.g = 0;
-	child.f = child.g + child.h;
+	child.h = 0;
+	child.g = g + 1;
 
 	for(int i = 1; i <= m; i++) {
 		for(int j = 1; j <= n; j++) {
-			if(board[i][j] == BOX || board[i][j] == BOX_OVER_TARGET) {
-				child.g += heu[i][j];
+			if(isBox(child.board[i][j])) {
+				child.h += heu[i][j];
 			}
 		}
 	}
+
+	child.f = child.g + child.h;
 }
 
 list<Move> a_star(const State& start)
 {
+	int numStatesVisited=0;
+	double avgBranchingFactor=0.0;
+	int maxBranchingFactor=0;
+	int minBranchingFactor=9999;
+	int possibleMoves=0;
 	priority_queue<State, vector<State>, lessF> open;
-	set<State> states;
+	set<State> states, visited;
 	open.push(start);
 	while(!open.empty()) {
 		State best = open.top();
 		open.pop();
+		if(!visited.insert(best).second) {
+			continue;
+		}
+		numStatesVisited++;
+		#ifndef DEBUG
+		if(numStatesVisited%1000 == 0) best.print();
+		#else
+		printf("[%d](queue size: %d) Best in the queue:\n", numStatesVisited, open.size()+1);
 		best.print();
+		printf("Path: ");
+		for(list<Move>::iterator it=best.trace.begin(); it!=best.trace.end(); it++)
+			printf("%s ", moveStrings[*it]);
+		printf("\n");
 		sleep(SLEEP_TIME);
+		#endif
+		possibleMoves=0;
 		for(int m=0; m<NMOVES; m++) {
-			printf("m: %i\n", m);
 			if(best.canMove((Move)m)) {
-				printf("canMove()\n");
+				possibleMoves++;
+				#ifdef DEBUG
+				printf("canMove! - %s\n", moveStrings[m]);
+				#endif
 				State child;
 				best.apply(m, child);
+				child.trace = best.trace;
+				child.trace.push_back(m);
 				if (child.isGoal()) {
+					#ifdef DEBUG
 					printf("isGoal()\n");
 					child.print();
-					return list<Move>(0,0); //return solution;
+					#endif
+					assert(numStatesVisited > 0);
+					avgBranchingFactor /= numStatesVisited;
+					printf("Branching Factor:\n* Average: %lf\n* Minimum: %d\n* Maximum: %d\n",
+							avgBranchingFactor, minBranchingFactor, maxBranchingFactor);
+					return child.trace; //return solution;
 				}
 				set<State>::iterator cached = states.find(child);
 				if(cached == states.end() || cached->g > child.g) {
-					printf("Inserting\n");
+					#ifdef DEBUG
+					printf("Inserting:\n");
+					child.print();
+					#endif
 					states.insert(child);
 					open.push(child);
 				}
 			}
 		}
+		avgBranchingFactor += possibleMoves;
+		minBranchingFactor = min(minBranchingFactor, possibleMoves);
+		maxBranchingFactor = max(maxBranchingFactor, possibleMoves);
 	}
+	assert(numStatesVisited > 0);
+	avgBranchingFactor /= numStatesVisited;
+	printf("Branching Factor:\n* Average: %lf\n* Minimum: %d\n* Maximum: %d\n",
+			avgBranchingFactor, minBranchingFactor, maxBranchingFactor);
 	return list<Move>(0, 0);
 }
 
@@ -305,8 +357,13 @@ int main(int argc, char **argv)
 	}
 	assert(freopen(argv[1], "r", stdin));
 	b.read();
+	#ifndef DEBUG
 	b.print();
-	a_star(b);
+	#endif
+	list<Move> solution = a_star(b);
+	printf("Solution:\n");
+	for(list<Move>::iterator it=solution.begin(); it!=solution.end(); it++)
+		printf("%s\n", moveStrings[*it]);
+
 	return 0;
 }
-
