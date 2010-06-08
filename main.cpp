@@ -319,10 +319,9 @@ list<Move> a_star(const State& start)
 					child.print();
 					#endif
 					assert(numStatesVisited > 0);
-					avgBranchingFactor /= numStatesVisited;
-					printf("Branching Factor:\n* Average: %lf\n* Minimum: %d\n* Maximum: %d\n* Visited: %d\n",
-							avgBranchingFactor, minBranchingFactor, maxBranchingFactor, numStatesVisited);
-					printf("Solution Size: %i\n", child.trace.size());
+					;
+					printf("%i #total branching\n%lf #average branching\n%d #minimum branching\n%d #maximum branching\n%d #num visited\n%d #solution size\n",
+							(int) avgBranchingFactor, avgBranchingFactor / numStatesVisited, minBranchingFactor, maxBranchingFactor, numStatesVisited, child.trace.size());
 					exit(0);
 					return child.trace; //return solution;
 				}

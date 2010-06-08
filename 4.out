@@ -1,6 +1,6 @@
-Branching Factor:
-* Average: 2.301567
-* Minimum: 1
-* Maximum: 6
-* Visited: 5425
-Solution Size: 154
+12486 #total branching
+2.301567 #average branching
+1 #minimum branching
+6 #maximum branching
+5425 #num visited
+154 #solution size
