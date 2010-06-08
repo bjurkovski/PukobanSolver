@@ -149,6 +149,7 @@ void State::read()
 		}
 	}
 
+#ifdef DEBUG
 	for(int i = 1; i <= m; i++) {
 		for(int j = 1; j <= n; j++) {
 			printf("%i ", heu[i][j]);
@@ -156,6 +157,7 @@ void State::read()
 		printf("\n");
 	}
 	printf("\n");
+#endif
 }
 
 Code State::meaning(char c)
@@ -296,7 +298,7 @@ list<Move> a_star(const State& start)
 		}
 		numStatesVisited++;
 		#ifndef DEBUG
-		if(numStatesVisited%10000 == 0) printf("."); //best.print();
+		//if(numStatesVisited%10000 == 0) printf("."); //best.print();
 		#else
 		printf("[%d](queue size: %d) Best in the queue:\n", numStatesVisited, open.size()+1);
 		best.print();
@@ -318,8 +320,8 @@ list<Move> a_star(const State& start)
 					#endif
 					assert(numStatesVisited > 0);
 					avgBranchingFactor /= numStatesVisited;
-					printf("Branching Factor:\n* Average: %lf\n* Minimum: %d\n* Maximum: %d\n",
-							avgBranchingFactor, minBranchingFactor, maxBranchingFactor);
+					printf("Branching Factor:\n* Average: %lf\n* Minimum: %d\n* Maximum: %d\n* Visited: %d\n",
+							avgBranchingFactor, minBranchingFactor, maxBranchingFactor, numStatesVisited);
 					printf("Solution Size: %i\n", child.trace.size());
 					exit(0);
 					return child.trace; //return solution;
@@ -371,7 +373,7 @@ int main(int argc, char **argv)
 	assert(freopen(argv[1], "r", stdin));
 	b.read();
 	#ifndef DEBUG
-	b.print();
+	//b.print();
 	#endif
 	list<Move> solution = a_star(b);
 #ifdef DEBUG
