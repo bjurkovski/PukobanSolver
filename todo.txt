@@ -16,3 +16,9 @@
  * colocar num grafo da boost
  * floyd warshall da boost
  * match
+
+solução do 01:
+ * 127 movimentos do pukoban
+ * 50 movimentos de caixas
+ * às vezes ele movimenta caixas sem necessidade, tem que tratar isso (execute a solução e verá)
+
