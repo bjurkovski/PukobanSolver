@@ -10,6 +10,7 @@
 using namespace std;
 
 #define MAX_SIZE 10
+#define SLEEP_TIME 10
 
 #define X 0
 #define Y 1
@@ -28,6 +29,7 @@ enum {
 
 typedef int Code;
 static const char input_codes[NCODES + 1] = ".@+!*-#";
+int heu[MAX_SIZE][MAX_SIZE];
 
 enum {
 	UP,
@@ -51,7 +53,7 @@ bool isPull(Move m) {
 class State
 {
 public:
-	State() : f(0), g(0), m(0), n(0), pukoX(0), pukoY(0) { };
+	State() : f(0), g(0), h(0), m(0), n(0), pukoX(0), pukoY(0) { };
 	void read();
 	void print() const;
 	static Code meaning(char c);
@@ -63,7 +65,7 @@ public:
 
 	friend class lessF;
 
-	int f, g;
+	int f, g, h;
 
 private:
 	int m, n;
@@ -87,7 +89,7 @@ void State::print() const
 			printf("%c", i == pukoX && j == pukoY ? board[i][j] == EMPTY ? input_codes[PKB] : input_codes[PKB_OVER_TARGET]  : input_codes[board[i][j]]);
 		printf("\n");
 	}
-	printf("f: %5i\tg: %5i", f, g);
+	printf("f: %5i\tg: %5i\th: %5i", f, g, h);
 	printf("\n");
 }
 
@@ -118,6 +120,31 @@ void State::read()
 
 	for(j = 0; j <= n + 1; j++)
 		board[0][j] = board[m + 1][j] = WALL;
+
+	// heurística
+	memset(heu, 100, sizeof(heu));
+	for(int i = 1; i <= m; i++) {
+		for(int j = 1; j <= n; j++) {
+			if(board[i][j] == TARGET || board[i][j] == BOX_OVER_TARGET || board[i][j] == PKB_OVER_TARGET) {
+				for(int k = 1; k <= m; k++) {
+					for(int l = 1; l <= n; l++) {
+						int dist = abs(k - i) + abs(l - j);
+						if(heu[k][l] > dist) {
+							heu[k][l] = dist;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	for(int i = 1; i <= m; i++) {
+		for(int j = 1; j <= n; j++) {
+			printf("%i ", heu[i][j]);
+		}
+		printf("\n");
+	}
+	printf("\n");
 }
 
 Code State::meaning(char c)
@@ -138,6 +165,7 @@ const State& State::operator=(const State& b)
 	n = b.n;
 	f = b.f;
 	g = b.g;
+	h = b.h;
 	memcpy(board, b.board, sizeof(board));
 	return *this;
 }
@@ -222,7 +250,17 @@ void State::apply(Move move, State& child)
 
 	child.pukoX = nextX;
 	child.pukoY = nextY;
-	child.f = f + 1;
+	child.h = h + 1;
+	child.g = 0;
+	child.f = child.g + child.h;
+
+	for(int i = 1; i <= m; i++) {
+		for(int j = 1; j <= n; j++) {
+			if(board[i][j] == BOX || board[i][j] == BOX_OVER_TARGET) {
+				child.g += heu[i][j];
+			}
+		}
+	}
 }
 
 list<Move> a_star(const State& start)
@@ -234,6 +272,7 @@ list<Move> a_star(const State& start)
 		State best = open.top();
 		open.pop();
 		best.print();
+		sleep(SLEEP_TIME);
 		for(int m=0; m<NMOVES; m++) {
 			printf("m: %i\n", m);
 			if(best.canMove((Move)m)) {
