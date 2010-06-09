@@ -4,7 +4,7 @@ from string import maketrans
 if(len(sys.argv) < 3):
 	print "Usage: python translate_suko.py inputMaze outputMaze"
 else:
-	translationTable = maketrans(" .@$", ".@*+")
+	translationTable = maketrans(" .@$*", ".@*+!")
 
 	suko = open(sys.argv[1])
 	puko = open(sys.argv[2], 'w')
