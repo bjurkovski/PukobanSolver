@@ -9,7 +9,7 @@
 
 using namespace std;
 
-#define MAX_SIZE 10
+#define MAX_SIZE 25
 #define SLEEP_TIME 1//3
 //#define DEBUG
 
