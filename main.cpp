@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <cassert>
 #include <cstring>
+#include <ctime>
 
 using namespace std;
 
@@ -45,6 +46,8 @@ enum {
 };
 
 typedef int Move;
+static int movesBegin=0;
+static int movesEnd=NMOVES;
 static const int moves[NMOVES][2] = {{0,1}, {-1,0}, {0,-1}, {1,0}, {0,1}, {-1,0}, {0,-1}, {1,0}};
 static const char moveStrings[NMOVES][30] = {"Going right", "Going up", "Going left", "Going down",
 											  "Pulling right", "Pulling up", "Pulling left", "Pulling down"};
@@ -286,6 +289,8 @@ list<Move> a_star(const State& start)
 	int maxBranchingFactor=0;
 	int minBranchingFactor=9999;
 	int possibleMoves=0;
+	clock_t begin = clock();
+	
 	priority_queue<State, vector<State>, lessF> open;
 	set<State> states;
 	open.push(start);
@@ -297,15 +302,15 @@ list<Move> a_star(const State& start)
 			continue;
 		}
 		numStatesVisited++;
-		#ifndef DEBUG
+#ifndef DEBUG
 		//if(numStatesVisited%10000 == 0) printf("."); //best.print();
-		#else
+#else
 		printf("[%d](queue size: %d) Best in the queue:\n", numStatesVisited, open.size()+1);
 		best.print();
 		sleep(SLEEP_TIME);
-		#endif
+#endif
 		possibleMoves=0;
-		for(int m=0; m<NMOVES; m++) {
+		for(int m=movesBegin; m<movesEnd; m++) {
 			if(best.canMove((Move)m)) {
 				possibleMoves++;
 				#ifdef DEBUG
@@ -314,15 +319,15 @@ list<Move> a_star(const State& start)
 				State child;
 				best.apply(m, child);
 				if (child.isGoal()) {
-					#ifdef DEBUG
+#ifdef DEBUG
 					printf("isGoal()\n");
 					child.print();
-					#endif
+#endif
 					assert(numStatesVisited > 0);
-					;
-					printf("%i #total branching\n%lf #average branching\n%d #minimum branching\n%d #maximum branching\n%d #num visited\n%d #solution size\n",
-							(int) avgBranchingFactor, avgBranchingFactor / numStatesVisited, minBranchingFactor, maxBranchingFactor, numStatesVisited, child.trace.size());
-					exit(0);
+					double time = (double)(clock() - begin)/CLOCKS_PER_SEC;
+					printf("%lfs #time elapsed\n%i #total branching\n%lf #average branching\n%d #minimum branching\n%d #maximum branching\n%d #num visited\n%d #solution size\n",
+							time, (int) avgBranchingFactor, avgBranchingFactor / numStatesVisited, minBranchingFactor, maxBranchingFactor, numStatesVisited, child.trace.size());
+					//exit(0);
 					return child.trace; //return solution;
 				}
 				set<State>::iterator cached = states.find(child);
@@ -335,7 +340,7 @@ list<Move> a_star(const State& start)
 					open.push(child);
 				}
 
-				#ifdef DEBUG
+#ifdef DEBUG
 				printf("Inserting:\n");
 				if(cached == states.end()) {
 					printf("  new\n");
@@ -343,7 +348,7 @@ list<Move> a_star(const State& start)
 					printf("  cached->g: %i, child.g: %i\n", cached->g, child.g);
 				}
 				child.print();
-				#endif
+#endif
 
 #ifdef DEBUG
 				printf("States:\n");
@@ -365,20 +370,26 @@ int main(int argc, char **argv)
 	setbuf(stdout, NULL);
 
 	State b;
-	if(argc != 2) {
-		printf("Usage: %s <file_name>\n", argv[0]);
+	if(argc < 2 && argc > 3) {
+		printf("Usage: %s <file_name> [push-only/pull-only]\n", argv[0]);
 		exit(1);
 	}
 	assert(freopen(argv[1], "r", stdin));
 	b.read();
-	#ifndef DEBUG
-	//b.print();
-	#endif
+#ifndef DEBUG
+	b.print();
+#endif
+	if(argc==3) {
+		if(!strcmp(argv[2], "push-only"))
+			movesEnd /= 2;
+		else if(!strcmp(argv[2], "pull-only"))
+			movesBegin += 4;
+	}
 	list<Move> solution = a_star(b);
 #ifdef DEBUG
 	printf("Solution:\n");
 	for(list<Move>::iterator it=solution.begin(); it!=solution.end(); it++)
-		printf("%s ", moveStrings[*it]);
+		printf("%s\n", moveStrings[*it]);
 	printf("\n");
 #endif
 	return 0;
