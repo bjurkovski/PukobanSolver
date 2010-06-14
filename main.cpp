@@ -7,6 +7,7 @@
 #include <cassert>
 #include <cstring>
 #include <ctime>
+#include <climits>
 
 using namespace std;
 
@@ -301,13 +302,22 @@ void State::apply(Move move, State& child)
 	child.g = g + 1;
 
 	// begin heurística
+	int mindist = INT_MAX;
 	for(int i = 1; i <= m; i++) {
 		for(int j = 1; j <= n; j++) {
 			if(isBox(child.board[i][j])) {
 				child.h += heu[i][j][0];
+				int dist = abs(child.pukoX - i) + abs(child.pukoY - j);
+				if(dist < mindist) {
+					mindist = dist;
+				}
 			}
 		}
 	}
+#ifdef DEBUG
+	printf("mindist: %i\n", mindist);
+#endif
+	child.h += mindist;
 	// end heurística
 
 	child.f = child.g + child.h;
