@@ -1,10 +1,13 @@
 # Default Makefile.spec
 
+#profiling
+PROF = -pg
+
 #Additional include paths
 INCLUDE +=
 
 #Additional C flags
-CFLAGS += -Wall
+CFLAGS += -Wall $(PROF)
 
 #Additional C++ flags
 CPPFLAGS +=
@@ -13,7 +16,7 @@ CPPFLAGS +=
 LINKWITH +=
 
 #Additional Linker flags
-LDFLAGS +=
+LDFLAGS += $(PROF)
 
 #Name of the executable to create
 EXECUTABLE = solver
@@ -26,3 +29,8 @@ DYNLIB =
 
 #Other directories to update before compiling
 SUBDIR =
+
+#profiling
+prof:
+	gprof -c solver > profiling
+
