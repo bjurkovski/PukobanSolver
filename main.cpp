@@ -59,6 +59,13 @@ static const int moves[NMOVES][2] = {{0,1}, {-1,0}, {0,-1}, {1,0}, {0,1}, {-1,0}
 static const char moveStrings[NMOVES][30] = {"Going right", "Going up", "Going left", "Going down",
 											  "Pulling right", "Pulling up", "Pulling left", "Pulling down"};
 
+enum {
+	MIN_DISTANCE,
+	MATCH
+};
+
+static int heuristic = MATCH;
+
 bool isPull(Move m) {
 	return (m >= PULL_UP);
 }
@@ -211,7 +218,7 @@ void State::read()
 			heu[i][j][0] = heu[i][j][1];
 			for(int t = 2; t <= ntarget; t++) {
 				if(heu[i][j][t] < heu[i][j][0]) {
-					heu[i][j][0] = heu[i][j][t]; 
+					heu[i][j][0] = heu[i][j][t];
 				}
 			}
 		}
@@ -348,48 +355,52 @@ void State::apply(Move move, State& child)
 	child.g = g + 1;
 
 	// begin heurística
-	/* velha
-	int mindist = INT_MAX;
-	for(int i = 1; i <= m; i++) {
-		for(int j = 1; j <= n; j++) {
-			if(isBox(child.board[i][j])) {
-				child.h += heu[i][j][0];
-				int tdist = dist[child.pukoX][child.pukoY][i][j];
-				if(tdist < mindist) {
-					mindist = tdist;
+	//* velha
+	if(heuristic == MIN_DISTANCE) {
+		int mindist = INT_MAX;
+		for(int i = 1; i <= m; i++) {
+			for(int j = 1; j <= n; j++) {
+				if(isBox(child.board[i][j])) {
+					child.h += heu[i][j][0];
+					int tdist = dist[child.pukoX][child.pukoY][i][j];
+					if(tdist < mindist) {
+						mindist = tdist;
+					}
 				}
 			}
 		}
+	#ifdef DEBUG
+		printf("mindist: %i\n", mindist);
+	#endif
+		child.h += mindist;
 	}
-#ifdef DEBUG
-	printf("mindist: %i\n", mindist);
-#endif
-	child.h += mindist;
 	//*/
-	//* nova
-	int mindist = INT_MAX;
-	int boxIndex = 0;
-	for(int i = 1; i <= m; i++) {
-		for(int j = 1; j <= n; j++) {
-			if(isBox(child.board[i][j])) {
-				for(int t = 1; t <= ntarget; t++) {
-					cost[boxIndex][t - 1] = heu[i][j][t];
-				}
-				boxIndex++;
-				int tdist = dist[child.pukoX][child.pukoY][i][j];
-				if(tdist < mindist) {
-					mindist = tdist;
+	if(heuristic == MATCH) {
+		//* nova
+		int mindist = INT_MAX;
+		int boxIndex = 0;
+		for(int i = 1; i <= m; i++) {
+			for(int j = 1; j <= n; j++) {
+				if(isBox(child.board[i][j])) {
+					for(int t = 1; t <= ntarget; t++) {
+						cost[boxIndex][t - 1] = heu[i][j][t];
+					}
+					boxIndex++;
+					int tdist = dist[child.pukoX][child.pukoY][i][j];
+					if(tdist < mindist) {
+						mindist = tdist;
+					}
 				}
 			}
 		}
+		int tmatch = hungarian();
+		child.h += tmatch;
+		child.h += mindist;
+	#ifdef DEBUG
+		printf("tmatch: %i\n", tmatch);
+		printf("mindist: %i\n", mindist);
+	#endif
 	}
-	int tmatch = hungarian();
-	child.h += tmatch;
-	child.h += mindist;
-#ifdef DEBUG
-	printf("tmatch: %i\n", tmatch);
-	printf("mindist: %i\n", mindist);
-#endif
 	//*/
 	// end heurística
 
@@ -405,7 +416,7 @@ list<Move> a_star(const State& start)
 	int minBranchingFactor=9999;
 	int possibleMoves=0;
 	clock_t begin = clock();
-	
+
 	priority_queue<State, vector<State>, lessF> open;
 	set<State> states;
 	open.push(start);
@@ -488,8 +499,8 @@ int main(int argc, char **argv)
 	setbuf(stdout, NULL);
 
 	State b;
-	if(argc < 2 && argc > 3) {
-		printf("Usage: %s <file_name> [push-only/pull-only]\n", argv[0]);
+	if(argc < 2 && argc > 4) {
+		printf("Usage: %s <file_name> [push-only/pull-only] [match/min-distance]\n", argv[0]);
 		exit(1);
 	}
 	assert(freopen(argv[1], "r", stdin));
@@ -497,11 +508,17 @@ int main(int argc, char **argv)
 #ifndef DEBUG
 	b.print();
 #endif
-	if(argc==3) {
+	if(argc>=3) {
 		if(!strcmp(argv[2], "push-only"))
 			movesEnd /= 2;
 		else if(!strcmp(argv[2], "pull-only"))
 			movesBegin += 4;
+	}
+	if(argc==4) {
+		if(!strcmp(argv[3], "match"))
+			heuristic = MATCH;
+		else if(!strcmp(argv[3], "min-distance"))
+			heuristic = MIN_DISTANCE;
 	}
 	list<Move> solution = a_star(b);
 #ifdef DEBUG
