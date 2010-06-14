@@ -14,7 +14,7 @@ using namespace std;
 #define MAX_SIZE 25
 #define MAX_TARGET 10
 #define SLEEP_TIME 1//3
-#define DEBUG
+//#define DEBUG
 
 #define X 0
 #define Y 1
@@ -312,6 +312,7 @@ void State::apply(Move move, State& child)
 	child = *this;
 	int nextX = pukoX + moves[move][X];
 	int nextY = pukoY + moves[move][Y];
+	bool isBoxMove = false;
 
 	if(!isPull(move)) {
 		if(isBox(board[nextX][nextY])) {
@@ -320,6 +321,8 @@ void State::apply(Move move, State& child)
 
 			child.board[nextX][nextY] -= BOX;
 			child.board[nextNextX][nextNextY] += BOX;
+
+			isBoxMove = true;
 		}
 	}
 	else {
@@ -328,11 +331,17 @@ void State::apply(Move move, State& child)
 
 		child.board[boxX][boxY] -= BOX;
 		child.board[pukoX][pukoY] += BOX;
+
+		isBoxMove = true;
 	}
 
 	child.pukoX = nextX;
 	child.pukoY = nextY;
 	child.h = 0;
+
+	// para minimizar número de movimentos de caixas
+	//child.g = g + isBoxMove;
+	// para minimizar número de movimentos do sukoban
 	child.g = g + 1;
 
 	// begin heurística
