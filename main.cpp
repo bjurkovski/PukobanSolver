@@ -11,7 +11,9 @@
 
 using namespace std;
 
-#define MAX_SIZE 25
+#include "constraints.h"
+#include "match.h"
+
 #define MAX_TARGET 10
 #define SLEEP_TIME 1//3
 //#define DEBUG
@@ -35,6 +37,9 @@ typedef int Code;
 static const char input_codes[NCODES + 1] = ".@+!*-#";
 int heu[MAX_SIZE][MAX_SIZE][MAX_TARGET];
 int dist[MAX_SIZE][MAX_SIZE][MAX_SIZE][MAX_SIZE];
+
+int ntarget = 0; // number of targets
+int cost[MAX_SIZE][MAX_SIZE]; //cost matrix
 
 enum {
 	UP,
@@ -184,7 +189,6 @@ void State::read()
 #endif
 
 	// heurística
-	int ntarget = 0;
 	memset(heu, -1, sizeof(heu));
 	for(int i = 1; i <= m; i++) {
 		for(int j = 1; j <= n; j++) {
@@ -453,6 +457,14 @@ list<Move> a_star(const State& start)
 int main(int argc, char **argv)
 {
 	setbuf(stdout, NULL);
+
+	cost[0][0] =  10;
+	cost[0][1] =   5;
+	cost[1][0] =   5;
+	cost[1][1] =  10;
+	ntarget = 2;
+	printf("%i\n", hungarian());
+	return 0;
 
 	State b;
 	if(argc < 2 && argc > 3) {
