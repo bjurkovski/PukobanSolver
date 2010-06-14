@@ -18,13 +18,14 @@
  * match
 
 idéias novas:
+ * acessar as posições com caixa direto em vez de procurar em todo o board [MEMÓRIA!]
+ * usar bitset
  * calcular a heurística apenas se for ser inserido
- * tentar calcular incrementalmente
- * acessar as posições com caixa direto em vez de procurar em todo o board
+ * usar estimativa para solução com somente n das m>n caixas
  * estar ao mesmo tempo em todo o componente conexo
+ * compilar programa sempre com menor potencia de 2 maior que o tamanho do tabuleiro
 
 solução do 01:
  * 127 movimentos do pukoban
  * 50 movimentos de caixas
  * às vezes ele movimenta caixas sem necessidade, tem que tratar isso (execute a solução e verá)
-

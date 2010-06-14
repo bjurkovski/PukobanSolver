@@ -8,6 +8,7 @@
 #include <cstring>
 #include <ctime>
 #include <climits>
+#include <bitset>
 
 using namespace std;
 
@@ -32,7 +33,8 @@ enum {
 	NCODES
 };
 
-typedef int Code;
+//typedef int Code;
+typedef bitset<3> Code;
 static const char input_codes[NCODES + 1] = ".@+!*-#";
 int heu[MAX_SIZE][MAX_SIZE][MAX_TARGET];
 int dist[MAX_SIZE][MAX_SIZE][MAX_SIZE][MAX_SIZE];
