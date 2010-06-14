@@ -20,7 +20,7 @@
 idéias novas:
  * acessar as posições com caixa direto em vez de procurar em todo o board [MEMÓRIA!]
  * usar bitset
- * calcular a heurística apenas se for ser inserido
+ * calcular a heurística apenas se for ser inserido  DONE
  * usar estimativa para solução com somente n das m>n caixas
  * estar ao mesmo tempo em todo o componente conexo
  * compilar programa sempre com menor potencia de 2 maior que o tamanho do tabuleiro

@@ -33,8 +33,7 @@ enum {
 	NCODES
 };
 
-//typedef int Code;
-typedef bitset<3> Code;
+typedef int Code;
 static const char input_codes[NCODES + 1] = ".@+!*-#";
 int heu[MAX_SIZE][MAX_SIZE][MAX_TARGET];
 int dist[MAX_SIZE][MAX_SIZE][MAX_SIZE][MAX_SIZE];
@@ -88,6 +87,7 @@ public:
 	bool isGoal();
 	bool canMove(Move move);
 	void apply(Move move, State& child);
+	void calculateNewF();
 
 	friend class lessF;
 
@@ -349,46 +349,48 @@ void State::apply(Move move, State& child)
 
 	child.pukoX = nextX;
 	child.pukoY = nextY;
-	child.h = 0;
 
 	// para minimizar número de movimentos de caixas
 	//child.g = g + isBoxMove;
 	// para minimizar número de movimentos do sukoban
 	child.g = g + 1;
 
-	// begin heurística
-	//* velha
+	child.trace.push_back(move);
+}
+
+void State::calculateNewF()
+{
+	h = 0;
+
 	if(heuristic == MIN_DISTANCE) {
 		int mindist = INT_MAX;
 		for(int i = 1; i <= m; i++) {
 			for(int j = 1; j <= n; j++) {
-				if(isBox(child.board[i][j])) {
-					child.h += heu[i][j][0];
-					int tdist = dist[child.pukoX][child.pukoY][i][j];
+				if(isBox(board[i][j])) {
+					h += heu[i][j][0];
+					int tdist = dist[pukoX][pukoY][i][j];
 					if(tdist < mindist) {
 						mindist = tdist;
 					}
 				}
 			}
 		}
-	#ifdef DEBUG
+#ifdef DEBUG
 		printf("mindist: %i\n", mindist);
-	#endif
-		child.h += mindist;
+#endif
+		h += mindist;
 	}
-	//*/
-	if(heuristic == MATCH) {
-		//* nova
+	else if(heuristic == MATCH) {
 		int mindist = INT_MAX;
 		int boxIndex = 0;
 		for(int i = 1; i <= m; i++) {
 			for(int j = 1; j <= n; j++) {
-				if(isBox(child.board[i][j])) {
+				if(isBox(board[i][j])) {
 					for(int t = 1; t <= ntarget; t++) {
 						cost[boxIndex][t - 1] = heu[i][j][t];
 					}
 					boxIndex++;
-					int tdist = dist[child.pukoX][child.pukoY][i][j];
+					int tdist = dist[pukoX][pukoY][i][j];
 					if(tdist < mindist) {
 						mindist = tdist;
 					}
@@ -396,18 +398,15 @@ void State::apply(Move move, State& child)
 			}
 		}
 		int tmatch = hungarian();
-		child.h += tmatch;
-		child.h += mindist;
-	#ifdef DEBUG
+		h += tmatch;
+		h += mindist;
+#ifdef DEBUG
 		printf("tmatch: %i\n", tmatch);
 		printf("mindist: %i\n", mindist);
-	#endif
+#endif
 	}
-	//*/
-	// end heurística
 
-	child.f = child.g + child.h;
-	child.trace.push_back(move);
+	f = g + h;
 }
 
 list<Move> a_star(const State& start)
@@ -446,6 +445,7 @@ list<Move> a_star(const State& start)
 				#endif
 				State child;
 				best.apply(m, child);
+				//child.calculateNewF();
 				if (child.isGoal()) {
 #ifdef DEBUG
 					printf("isGoal()\n");
@@ -463,10 +463,12 @@ list<Move> a_star(const State& start)
 				}
 				set<State>::iterator cached = states.find(child);
 				if(cached == states.end()) {
+					child.calculateNewF();
 					states.insert(child);
 					open.push(child);
 				} else if(cached->g > child.g) {
 					states.erase(cached);
+					child.calculateNewF();
 					states.insert(child);
 					open.push(child);
 				}
