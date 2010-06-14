@@ -1,26 +1,31 @@
  * codificar levels DONE
  * ler levels DONE
  * a* DONE
- * heurística de pegar os menores
-   * implementar bfs no grafo implícito
-	 * salvar numa matriz a menor distância de cada quadrado para um target
-	 * atribuir isso para o h na função apply
+ * heurística de pegar os menores DONE
+   * implementar bfs no grafo implícito DONE
+	 * salvar numa matriz a menor distância de cada quadrado para um target DONE
+	 * atribuir isso para o h na função apply DONE
  * pesquisa bibliográfica
- * determinar
-   * número de movimentos
-	 * branching factor (min, max, médio)
- * aprender a usar boost
-   * download da 1_43_0
-	 * ./bootstrap.sh
-	 * sudo ./bjam install
- * colocar num grafo da boost
- * floyd warshall da boost
- * match
+ * determinar DONE
+   * número de movimentos DONE
+	 * branching factor (min, max, médio) DONE
+ * aprender a usar boost DONE
+   * download da 1_43_0 DONE
+	 * ./bootstrap.sh DONE
+	 * sudo ./bjam install DONE
+ * colocar num grafo da boost WONTDO
+ * floyd warshall da boost WONTDO
+ * match DONE
 
 idéias novas:
- * acessar as posições com caixa direto em vez de procurar em todo o board [MEMÓRIA!]
- * usar bitset
+ * acessar as posições com caixa direto em vez de procurar em todo o board [MEMÓRIA!] DONE (_Find_next)
+ * usar bitset DONE
  * calcular a heurística apenas se for ser inserido  DONE
+ * usar _Find_first / _Find_next
+ * usar gprof
+ * armazenar só o movimento e ponteiro para o pai no trace
+ * usar ponteiros no priority_queue e no set
+ * talvez tirar a variável f e usar (g + h) na lessF
  * usar estimativa para solução com somente n das m>n caixas
  * estar ao mesmo tempo em todo o componente conexo
  * compilar programa sempre com menor potencia de 2 maior que o tamanho do tabuleiro
@@ -28,4 +33,4 @@ idéias novas:
 solução do 01:
  * 127 movimentos do pukoban
  * 50 movimentos de caixas
- * às vezes ele movimenta caixas sem necessidade, tem que tratar isso (execute a solução e verá)
+ * às vezes ele movimenta caixas sem necessidade, tem que tratar isso (execute a solução e verá) DONE

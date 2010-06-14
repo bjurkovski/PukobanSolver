@@ -15,13 +15,14 @@ using namespace std;
 #include "constraints.h"
 #include "match.h"
 
-#define MAX_TARGET 10
 #define SLEEP_TIME 1//3
 
 #define X 0
 #define Y 1
 
 #define INDEX(i, j) ((i) * MAX_SIZE + (j))
+#define INDEX_X(p) ((p) / MAX_SIZE)
+#define INDEX_Y(p) ((p) % MAX_SIZE)
 
 enum {
 	ERROR_CODE=-1,
@@ -41,7 +42,7 @@ int heu[MAX_SIZE][MAX_SIZE][MAX_TARGET];
 int dist[MAX_SIZE][MAX_SIZE][MAX_SIZE][MAX_SIZE];
 
 int ntarget = 0; // number of targets
-int cost[MAX_SIZE][MAX_SIZE]; //cost matrix
+int cost[MAX_TARGET][MAX_TARGET]; //cost matrix
 
 enum {
 	UP,
@@ -73,14 +74,10 @@ bool isPull(Move m) {
 	return (m >= PULL_UP);
 }
 
-bool isBox(Code c) {
-	return (c == BOX || c == BOX_OVER_TARGET);
-}
-
 class State
 {
 public:
-	State() : f(0), g(0), h(0), trace(), m(0), n(0), pukoX(0), pukoY(0), box() { };
+	State() : f(0), g(0), h(0), trace(), pukoX(0), pukoY(0), box() { };
 	void read();
 	void print() const;
 	static Code meaning(char c);
@@ -96,12 +93,12 @@ public:
 	int f, g, h;
 	list<Move> trace;
 private:
-	int m, n;
 	int pukoX, pukoY;
 	bitset<MAX_SIZE*MAX_SIZE> box;
 };
 
 Code board[MAX_SIZE][MAX_SIZE];
+static int m, n;
 
 class lessF
 {
@@ -262,8 +259,6 @@ Code State::meaning(char c)
 
 const State& State::operator=(const State& b)
 {
-	m = b.m;
-	n = b.n;
 	f = b.f;
 	g = b.g;
 	h = b.h;
@@ -280,21 +275,30 @@ bool State::operator<(const State& b) const
 	if(pukoX > b.pukoX) return false;
 	if(pukoY < b.pukoY) return true;
 	if(pukoY > b.pukoY) return false;
-	for(int i = 1; i <= m; i++)
-		for(int j = 1; j <= n; j++)
-			if(box[INDEX(i, j)] < b.box[INDEX(i, j)]) return true;
-			else if (box[INDEX(i, j)] > b.box[INDEX(i, j)]) return false;
+
+	unsigned int l = box._Find_first(),
+			 				 r = b.box._Find_first();
+	
+	while(1) {
+		if(l < r) return false;     // 1 == box[l] > b.box[l] == 0
+		else if(r < l) return true; // 0 == box[r] < b.box[r] == 1
+		if(l == box.size()) return false;
+		l = box._Find_next(l);
+		r = b.box._Find_next(r);
+	}
+
 	return false;
 }
 
 bool State::isGoal()
 {
-	for(int i = 1; i <= m; i++) {
-		for(int j = 1; j <= n; j++) {
-			if(box[INDEX(i, j)] && board[i][j] != TARGET)
-				return false;
-		}
-	}
+	unsigned int p = box._Find_first();
+
+	do {
+		if(board[INDEX_X(p)][INDEX_Y(p)] != TARGET)
+			return false;
+	} while((p = box._Find_next(p)) != box.size());
+
 	return true;
 }
 
@@ -314,15 +318,11 @@ bool State::canMove(Move move)
 			if(board[nextNextX][nextNextY] == WALL || box[INDEX(nextNextX, nextNextY)])
 				return false;
 		}
-	}
-	else {
+	} else {
 		int boxX = pukoX - moves[move][X];
 		int boxY = pukoY - moves[move][Y];
 
-		if(!box[INDEX(boxX, boxY)])
-			return false;
-
-		if(box[INDEX(nextX, nextY)])
+		if(!box[INDEX(boxX, boxY)] || box[INDEX(nextX, nextY)])
 			return false;
 	}
 
@@ -374,6 +374,8 @@ void State::calculateNewF()
 
 	if(heuristic == MIN_DISTANCE) {
 		int mindist = INT_MAX;
+
+		// usar _Find_first / next
 		for(int i = 1; i <= m; i++) {
 			for(int j = 1; j <= n; j++) {
 				if(box[INDEX(i, j)]) {
@@ -393,6 +395,8 @@ void State::calculateNewF()
 	else if(heuristic == MATCH) {
 		int mindist = INT_MAX;
 		int boxIndex = 0;
+
+		// usar _Find_first / next
 		for(int i = 1; i <= m; i++) {
 			for(int j = 1; j <= n; j++) {
 				if(box[INDEX(i, j)]) {
