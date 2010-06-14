@@ -11,6 +11,7 @@
 using namespace std;
 
 #define MAX_SIZE 25
+#define MAX_TARGET 10
 #define SLEEP_TIME 1//3
 //#define DEBUG
 
@@ -31,7 +32,7 @@ enum {
 
 typedef int Code;
 static const char input_codes[NCODES + 1] = ".@+!*-#";
-int heu[MAX_SIZE][MAX_SIZE];
+int heu[MAX_SIZE][MAX_SIZE][MAX_TARGET];
 
 enum {
 	UP,
@@ -136,15 +137,28 @@ void State::read()
 		board[0][j] = board[m + 1][j] = WALL;
 
 	// heurística
-	memset(heu, 100, sizeof(heu));
+	int ntarget = 0;
+	static const int dx[] = {-1, 0, 1,  0},
+	                 dy[] = { 0, 1, 0, -1};
+	memset(heu, -1, sizeof(heu));
 	for(int i = 1; i <= m; i++) {
 		for(int j = 1; j <= n; j++) {
 			if(board[i][j] == TARGET || board[i][j] == BOX_OVER_TARGET || board[i][j] == PKB_OVER_TARGET) {
-				for(int k = 1; k <= m; k++) {
-					for(int l = 1; l <= n; l++) {
-						int dist = abs(k - i) + abs(l - j);
-						if(heu[k][l] > dist) {
-							heu[k][l] = dist;
+				ntarget++;
+				heu[i][j][ntarget] = 0;
+				queue<pair<int, int> > open;
+				open.push(make_pair(i, j));
+				while(!open.empty()) {
+					pair<int, int> p = open.front();
+					int ci = p.first,
+							cj = p.second;
+					open.pop();
+					for(int d = 0; d < 4; d++) {
+						int x = ci + dx[d],
+								y = cj + dy[d];
+						if(x > 0 && x <= m && y > 0 && y <= n && heu[x][y][ntarget] == -1 && board[x][y] != WALL) {
+							heu[x][y][ntarget] = heu[ci][cj][ntarget] + 1;
+							open.push(make_pair(x, y));
 						}
 					}
 				}
@@ -152,14 +166,30 @@ void State::read()
 		}
 	}
 
-#ifdef DEBUG
+	assert(ntarget < MAX_TARGET);
+
 	for(int i = 1; i <= m; i++) {
 		for(int j = 1; j <= n; j++) {
-			printf("%i ", heu[i][j]);
+			heu[i][j][0] = heu[i][j][1];
+			for(int t = 2; t <= ntarget; t++) {
+				if(heu[i][j][t] < heu[i][j][0]) {
+					heu[i][j][0] = heu[i][j][t]; 
+				}
+			}
+		}
+	}
+
+#ifdef DEBUG
+	for(int t = 0; t <= ntarget; t++) {
+		printf("heu[%2i]:\n", t);
+		for(int i = 1; i <= m; i++) {
+			for(int j = 1; j <= n; j++) {
+				printf("%2i ", heu[i][j][t]);
+			}
+			printf("\n");
 		}
 		printf("\n");
 	}
-	printf("\n");
 #endif
 }
 
@@ -270,13 +300,15 @@ void State::apply(Move move, State& child)
 	child.h = 0;
 	child.g = g + 1;
 
+	// begin heurística
 	for(int i = 1; i <= m; i++) {
 		for(int j = 1; j <= n; j++) {
 			if(isBox(child.board[i][j])) {
-				child.h += heu[i][j];
+				child.h += heu[i][j][0];
 			}
 		}
 	}
+	// end heurística
 
 	child.f = child.g + child.h;
 	child.trace.push_back(move);
