@@ -16,7 +16,6 @@ using namespace std;
 
 #define MAX_TARGET 10
 #define SLEEP_TIME 1//3
-//#define DEBUG
 
 #define X 0
 #define Y 1
@@ -349,6 +348,7 @@ void State::apply(Move move, State& child)
 	child.g = g + 1;
 
 	// begin heurística
+	/* velha
 	int mindist = INT_MAX;
 	for(int i = 1; i <= m; i++) {
 		for(int j = 1; j <= n; j++) {
@@ -365,6 +365,32 @@ void State::apply(Move move, State& child)
 	printf("mindist: %i\n", mindist);
 #endif
 	child.h += mindist;
+	//*/
+	//* nova
+	int mindist = INT_MAX;
+	int boxIndex = 0;
+	for(int i = 1; i <= m; i++) {
+		for(int j = 1; j <= n; j++) {
+			if(isBox(child.board[i][j])) {
+				for(int t = 1; t <= ntarget; t++) {
+					cost[boxIndex][t - 1] = heu[i][j][t];
+				}
+				boxIndex++;
+				int tdist = dist[child.pukoX][child.pukoY][i][j];
+				if(tdist < mindist) {
+					mindist = tdist;
+				}
+			}
+		}
+	}
+	int tmatch = hungarian();
+	child.h += tmatch;
+	child.h += mindist;
+#ifdef DEBUG
+	printf("tmatch: %i\n", tmatch);
+	printf("mindist: %i\n", mindist);
+#endif
+	//*/
 	// end heurística
 
 	child.f = child.g + child.h;
@@ -416,7 +442,10 @@ list<Move> a_star(const State& start)
 					double time = (double)(clock() - begin)/CLOCKS_PER_SEC;
 					printf("%lfs #time elapsed\n%i #total branching\n%lf #average branching\n%d #minimum branching\n%d #maximum branching\n%d #num visited\n%d #solution size\n",
 							time, (int) avgBranchingFactor, avgBranchingFactor / numStatesVisited, minBranchingFactor, maxBranchingFactor, numStatesVisited, child.trace.size());
-					//exit(0);
+#ifndef DEBUG
+					// leva muito tempo desalocando a memória
+					exit(0);
+#endif
 					return child.trace; //return solution;
 				}
 				set<State>::iterator cached = states.find(child);
@@ -457,14 +486,6 @@ list<Move> a_star(const State& start)
 int main(int argc, char **argv)
 {
 	setbuf(stdout, NULL);
-
-	cost[0][0] =  10;
-	cost[0][1] =   5;
-	cost[1][0] =   5;
-	cost[1][1] =  10;
-	ntarget = 2;
-	printf("%i\n", hungarian());
-	return 0;
 
 	State b;
 	if(argc < 2 && argc > 3) {

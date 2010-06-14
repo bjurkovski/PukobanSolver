@@ -159,7 +159,9 @@ int hungarian()
 	init_labels();                    //step 0
 	augment();                        //steps 1-3
 	for (int x = 0; x < n; x++) {     //forming answer there
+#ifdef DEBUG
 		printf("%i %i %i\n", x, xy[x], -cost[x][xy[x]]);
+#endif
 		ret += cost[x][xy[x]];
 	}
 

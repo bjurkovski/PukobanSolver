@@ -17,6 +17,12 @@
  * floyd warshall da boost
  * match
 
+idéias novas:
+ * calcular a heurística apenas se for ser inserido
+ * tentar calcular incrementalmente
+ * acessar as posições com caixa direto em vez de procurar em todo o board
+ * estar ao mesmo tempo em todo o componente conexo
+
 solução do 01:
  * 127 movimentos do pukoban
  * 50 movimentos de caixas

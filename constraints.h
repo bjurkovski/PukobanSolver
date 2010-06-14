@@ -2,6 +2,7 @@
 #define __CONSTRAINTS_H__
 
 #define MAX_SIZE 25
+//#define DEBUG
 
 #endif
 
