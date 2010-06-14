@@ -14,7 +14,7 @@ using namespace std;
 #define MAX_SIZE 25
 #define MAX_TARGET 10
 #define SLEEP_TIME 1//3
-//#define DEBUG
+#define DEBUG
 
 #define X 0
 #define Y 1
@@ -34,6 +34,7 @@ enum {
 typedef int Code;
 static const char input_codes[NCODES + 1] = ".@+!*-#";
 int heu[MAX_SIZE][MAX_SIZE][MAX_TARGET];
+int dist[MAX_SIZE][MAX_SIZE][MAX_SIZE][MAX_SIZE];
 
 enum {
 	UP,
@@ -137,29 +138,62 @@ void State::read()
 	for(j = 0; j <= n + 1; j++)
 		board[0][j] = board[m + 1][j] = WALL;
 
-	// heurística
-	int ntarget = 0;
+	// floyd warshal
+	memset(dist, 1, sizeof(dist));
 	static const int dx[] = {-1, 0, 1,  0},
 	                 dy[] = { 0, 1, 0, -1};
+	for(int i = 1; i <= m; i++) {
+		for(int j = 1; j <= n; j++) {
+			dist[i][j][i][j] = 0;
+			for(int d = 0; d < 4; d++) {
+				int x = i + dx[d],
+						y = j + dy[d];
+				if(x > 0 && x <= m && y > 0 && y <= n && board[x][y] != WALL) {
+					dist[i][j][x][y] = 1;
+				}
+			}
+		}
+	}
+	for(int kx = 1; kx <= m; kx++) {
+		for(int ky = 1; ky <= n; ky++) {
+			for(int ix = 1; ix <= m; ix++) {
+				for(int iy = 1; iy <= n; iy++) {
+					for(int jx = 1; jx <= m; jx++) {
+						for(int jy = 1; jy <= n; jy++) {
+							dist[ix][iy][jx][jy] = min(dist[ix][iy][jx][jy], dist[ix][iy][kx][ky] + dist[kx][ky][jx][jy]);
+						}
+					}
+				}
+			}
+		}
+	}
+
+#ifdef DEBUG
+	for(int i = 1; i <= m; i++) {
+		for(int j = 1; j <= n; j++) {
+			printf("dist[%2i][%2i]:\n", i, j);
+			for(int k = 1; k <= m; k++) {
+				for(int l = 1; l <= n; l++) {
+					printf("%2i ", dist[i][j][k][l] == 0x01010101 ? -1 : dist[i][j][k][l]);
+				}
+				printf("\n");
+			}
+			printf("\n");
+		}
+	}
+#endif
+
+	// heurística
+	int ntarget = 0;
 	memset(heu, -1, sizeof(heu));
 	for(int i = 1; i <= m; i++) {
 		for(int j = 1; j <= n; j++) {
 			if(board[i][j] == TARGET || board[i][j] == BOX_OVER_TARGET || board[i][j] == PKB_OVER_TARGET) {
 				ntarget++;
-				heu[i][j][ntarget] = 0;
-				queue<pair<int, int> > open;
-				open.push(make_pair(i, j));
-				while(!open.empty()) {
-					pair<int, int> p = open.front();
-					int ci = p.first,
-							cj = p.second;
-					open.pop();
-					for(int d = 0; d < 4; d++) {
-						int x = ci + dx[d],
-								y = cj + dy[d];
-						if(x > 0 && x <= m && y > 0 && y <= n && heu[x][y][ntarget] == -1 && board[x][y] != WALL) {
-							heu[x][y][ntarget] = heu[ci][cj][ntarget] + 1;
-							open.push(make_pair(x, y));
+				for(int x = 1; x <= m; x++) {
+					for(int y = 1; y <= n; y++) {
+						if(board[x][y] != WALL) {
+							heu[x][y][ntarget] = dist[i][j][x][y];
 						}
 					}
 				}
@@ -307,9 +341,9 @@ void State::apply(Move move, State& child)
 		for(int j = 1; j <= n; j++) {
 			if(isBox(child.board[i][j])) {
 				child.h += heu[i][j][0];
-				int dist = abs(child.pukoX - i) + abs(child.pukoY - j);
-				if(dist < mindist) {
-					mindist = dist;
+				int tdist = dist[child.pukoX][child.pukoY][i][j];
+				if(tdist < mindist) {
+					mindist = tdist;
 				}
 			}
 		}
