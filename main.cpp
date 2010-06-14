@@ -21,6 +21,8 @@ using namespace std;
 #define X 0
 #define Y 1
 
+#define INDEX(i, j) ((i) * MAX_SIZE + (j))
+
 enum {
 	ERROR_CODE=-1,
 	EMPTY = 0,
@@ -78,7 +80,7 @@ bool isBox(Code c) {
 class State
 {
 public:
-	State() : f(0), g(0), h(0), trace(), m(0), n(0), pukoX(0), pukoY(0) { };
+	State() : f(0), g(0), h(0), trace(), m(0), n(0), pukoX(0), pukoY(0), box() { };
 	void read();
 	void print() const;
 	static Code meaning(char c);
@@ -96,8 +98,10 @@ public:
 private:
 	int m, n;
 	int pukoX, pukoY;
-	Code board[MAX_SIZE][MAX_SIZE];
+	bitset<MAX_SIZE*MAX_SIZE> box;
 };
+
+Code board[MAX_SIZE][MAX_SIZE];
 
 class lessF
 {
@@ -112,7 +116,7 @@ void State::print() const
 	int i, j;
 	for(i = 0; i <= m + 1; i++) {
 		for(j = 0; j <= n + 1; j++)
-			printf("%c", i == pukoX && j == pukoY ? board[i][j] == EMPTY ? input_codes[PKB] : input_codes[PKB_OVER_TARGET]  : input_codes[board[i][j]]);
+			printf("%c", i == pukoX && j == pukoY ? board[i][j] == EMPTY ? input_codes[PKB] : input_codes[PKB_OVER_TARGET]  : box[INDEX(i, j)] ? board[i][j] == TARGET ? input_codes[BOX_OVER_TARGET] : input_codes[BOX] : input_codes[board[i][j]]);
 		printf("\n");
 	}
 	printf("f: %5i\tg: %5i\th: %5i", f, g, h);
@@ -137,6 +141,10 @@ void State::read()
 				else board[i][j] = TARGET;
 				pukoX = i;
 				pukoY = j;
+			} else if(board[i][j] == BOX || board[i][j] == BOX_OVER_TARGET) {
+				if(board[i][j] == BOX) board[i][j] = EMPTY;
+				else board[i][j] = TARGET;
+				box[INDEX(i, j)] = 1;
 			}
 		}
 		i++;
@@ -200,7 +208,7 @@ void State::read()
 	memset(heu, -1, sizeof(heu));
 	for(int i = 1; i <= m; i++) {
 		for(int j = 1; j <= n; j++) {
-			if(board[i][j] == TARGET || board[i][j] == BOX_OVER_TARGET || board[i][j] == PKB_OVER_TARGET) {
+			if(board[i][j] == TARGET) {
 				ntarget++;
 				for(int x = 1; x <= m; x++) {
 					for(int y = 1; y <= n; y++) {
@@ -262,7 +270,7 @@ const State& State::operator=(const State& b)
 	pukoX = b.pukoX;
 	pukoY = b.pukoY;
 	trace = b.trace;
-	memcpy(board, b.board, sizeof(board));
+	box = b.box;
 	return *this;
 }
 
@@ -274,17 +282,19 @@ bool State::operator<(const State& b) const
 	if(pukoY > b.pukoY) return false;
 	for(int i = 1; i <= m; i++)
 		for(int j = 1; j <= n; j++)
-			if(board[i][j] < b.board[i][j]) return true;
-			else if(board[i][j] > b.board[i][j]) return false;
+			if(box[INDEX(i, j)] < b.box[INDEX(i, j)]) return true;
+			else if (box[INDEX(i, j)] > b.box[INDEX(i, j)]) return false;
 	return false;
 }
 
 bool State::isGoal()
 {
-	for(int i=1; i<=m; i++)
-		for(int j=1; j<=n; j++)
-			if(board[i][j] == BOX)
+	for(int i = 1; i <= m; i++) {
+		for(int j = 1; j <= n; j++) {
+			if(box[INDEX(i, j)] && board[i][j] != TARGET)
 				return false;
+		}
+	}
 	return true;
 }
 
@@ -297,11 +307,11 @@ bool State::canMove(Move move)
 		return false;
 
 	if(!isPull(move)) {
-		if(isBox(board[nextX][nextY])) {
+		if(box[INDEX(nextX, nextY)]) {
 			int nextNextX = nextX + moves[move][X];
 			int nextNextY = nextY + moves[move][Y];
 
-			if(board[nextNextX][nextNextY] == WALL || isBox(board[nextNextX][nextNextY]))
+			if(board[nextNextX][nextNextY] == WALL || box[INDEX(nextNextX, nextNextY)])
 				return false;
 		}
 	}
@@ -309,10 +319,10 @@ bool State::canMove(Move move)
 		int boxX = pukoX - moves[move][X];
 		int boxY = pukoY - moves[move][Y];
 
-		if(!isBox(board[boxX][boxY]))
+		if(!box[INDEX(boxX, boxY)])
 			return false;
 
-		if(isBox(board[nextX][nextY]))
+		if(box[INDEX(nextX, nextY)])
 			return false;
 	}
 
@@ -327,12 +337,12 @@ void State::apply(Move move, State& child)
 	bool isBoxMove = false;
 
 	if(!isPull(move)) {
-		if(isBox(board[nextX][nextY])) {
+		if(box[INDEX(nextX, nextY)]) {
 			int nextNextX = nextX + moves[move][X];
 			int nextNextY = nextY + moves[move][Y];
 
-			child.board[nextX][nextY] -= BOX;
-			child.board[nextNextX][nextNextY] += BOX;
+			child.box[INDEX(nextX, nextY)] = 0;
+			child.box[INDEX(nextNextX, nextNextY)] = 1;
 
 			isBoxMove = true;
 		}
@@ -341,8 +351,8 @@ void State::apply(Move move, State& child)
 		int boxX = pukoX - moves[move][X];
 		int boxY = pukoY - moves[move][Y];
 
-		child.board[boxX][boxY] -= BOX;
-		child.board[pukoX][pukoY] += BOX;
+		child.box[INDEX(boxX, boxY)] = 0;
+		child.box[INDEX(pukoX, pukoY)] = 1;
 
 		isBoxMove = true;
 	}
@@ -366,7 +376,7 @@ void State::calculateNewF()
 		int mindist = INT_MAX;
 		for(int i = 1; i <= m; i++) {
 			for(int j = 1; j <= n; j++) {
-				if(isBox(board[i][j])) {
+				if(box[INDEX(i, j)]) {
 					h += heu[i][j][0];
 					int tdist = dist[pukoX][pukoY][i][j];
 					if(tdist < mindist) {
@@ -385,7 +395,7 @@ void State::calculateNewF()
 		int boxIndex = 0;
 		for(int i = 1; i <= m; i++) {
 			for(int j = 1; j <= n; j++) {
-				if(isBox(board[i][j])) {
+				if(box[INDEX(i, j)]) {
 					for(int t = 1; t <= ntarget; t++) {
 						cost[boxIndex][t - 1] = heu[i][j][t];
 					}
