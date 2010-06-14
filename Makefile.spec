@@ -34,3 +34,6 @@ SUBDIR =
 prof:
 	gprof -c solver > profiling
 
+clean:
+	rm gmon.out -f
+
