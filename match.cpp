@@ -42,7 +42,7 @@ void update_labels()
 			slack[y] -= delta;
 }
 
-void add_to_tree(int x, int prevx) 
+void add_to_tree(int x, int prevx)
 	//x - current vertex,prevx - vertex from X before x in the alternating path,
 	//so we add edges (prevx, xy[x]), (xy[x], x)
 {
@@ -101,8 +101,8 @@ void augment()                         //main function of the algorithm
 		if (y < n) break;                                               //augmenting path found!
 
 		update_labels();                                                //augmenting path not found, so improve labeling
-		wr = rd = 0;                
-		for (y = 0; y < n; y++)        
+		wr = rd = 0;
+		for (y = 0; y < n; y++)
 			//in this cycle we add edges that were added to the equality graph as a
 			//result of improving the labeling, we add edge (slackx[y], y) to the tree if
 			//and only if !T[y] &&  slack[y] == 0, also with this edge we add another one
@@ -117,7 +117,7 @@ void augment()                         //main function of the algorithm
 				else
 				{
 					T[y] = true;                                        //else just add y to T,
-					if (!S[yx[y]])    
+					if (!S[yx[y]])
 					{
 						q[wr++] = yx[y];                                //add vertex yx[y], which is matched with
 						//y, to the queue
@@ -147,14 +147,14 @@ int hungarian()
 {
 	// mudança para ser o mínimo em vez de máximo
 	n = ntarget;
-	for(int i = 0; i < n; i++)
-		for(int j = 0; j < n; j++)
-			cost[i][j] = -cost[i][j];
+	//for(int i = 0; i < n; i++)
+	//	for(int j = 0; j < n; j++)
+	//		cost[i][j] = -cost[i][j];
 	// fim
 
 	int ret = 0;                      //weight of the optimal matching
 	max_match = 0;                    //number of vertices in current matching
-	memset(xy, -1, sizeof(xy));    
+	memset(xy, -1, sizeof(xy));
 	memset(yx, -1, sizeof(yx));
 	init_labels();                    //step 0
 	augment();                        //steps 1-3
@@ -168,4 +168,3 @@ int hungarian()
 	// mudança para ser o mínimo em vez de máximo
 	return -ret;
 }
-
