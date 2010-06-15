@@ -390,18 +390,17 @@ void State::calculateNewF()
 	if(heuristic == MIN_DISTANCE) {
 		int mindist = INT_MAX;
 
-		// usar _Find_first / next
-		for(int i = 1; i <= m; i++) {
-			for(int j = 1; j <= n; j++) {
-				if(box[INDEX(i, j)]) {
-					h += heu[i][j][0];
-					int tdist = dist[pukoX][pukoY][i][j];
-					if(tdist < mindist) {
-						mindist = tdist;
-					}
-				}
+		unsigned int p = box._Find_first();
+		do {
+			int i = INDEX_X(p),
+					j = INDEX_Y(p);
+			h += heu[i][j][0];
+			int tdist = dist[pukoX][pukoY][i][j];
+			if(tdist < mindist) {
+				mindist = tdist;
 			}
-		}
+		} while((p = box._Find_next(p)) != box.size());
+
 #ifdef DEBUG
 		printf("mindist: %i\n", mindist);
 #endif
@@ -411,21 +410,21 @@ void State::calculateNewF()
 		int mindist = INT_MAX;
 		int boxIndex = 0;
 
-		// usar _Find_first / next
-		for(int i = 1; i <= m; i++) {
-			for(int j = 1; j <= n; j++) {
-				if(box[INDEX(i, j)]) {
-					for(int t = 1; t <= ntarget; t++) {
-						cost[boxIndex][t - 1] = heu[i][j][t];
-					}
-					boxIndex++;
-					int tdist = dist[pukoX][pukoY][i][j];
-					if(tdist < mindist) {
-						mindist = tdist;
-					}
-				}
+		unsigned int p = box._Find_first();
+		do {
+			int i = INDEX_X(p),
+					j = INDEX_Y(p);
+
+			for(int t = 1; t <= ntarget; t++) {
+				cost[boxIndex][t - 1] = heu[i][j][t];
 			}
-		}
+			boxIndex++;
+			int tdist = dist[pukoX][pukoY][i][j];
+			if(tdist < mindist) {
+				mindist = tdist;
+			}
+		} while((p = box._Find_next(p)) != box.size());
+
 		int tmatch = hungarian();
 		h += tmatch;
 		h += mindist;

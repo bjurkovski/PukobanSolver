@@ -21,10 +21,10 @@ idéias novas:
  * acessar as posições com caixa direto em vez de procurar em todo o board [MEMÓRIA!] DONE (_Find_next)
  * usar bitset DONE
  * calcular a heurística apenas se for ser inserido  DONE
- * usar _Find_first / _Find_next
+ * usar _Find_first / _Find_next DONE
  * usar gprof
- * armazenar só o movimento e ponteiro para o pai no trace
- * usar ponteiros no priority_queue e no set
+ * armazenar só o movimento e ponteiro para o pai no trace DONE (falta testar)
+ * usar ponteiros no priority_queue e no set DONE
  * talvez tirar a variável f e usar (g + h) na lessF
  * usar estimativa para solução com somente n das m>n caixas
  * estar ao mesmo tempo em todo o componente conexo
