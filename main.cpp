@@ -416,7 +416,7 @@ void State::calculateNewF()
 					j = INDEX_Y(p);
 
 			for(int t = 1; t <= ntarget; t++) {
-				cost[boxIndex][t - 1] = heu[i][j][t];
+				cost[boxIndex][t - 1] = -heu[i][j][t];
 			}
 			boxIndex++;
 			int tdist = dist[pukoX][pukoY][i][j];
@@ -583,4 +583,3 @@ int main(int argc, char **argv)
 #endif
 	return 0;
 }
-
