@@ -416,8 +416,7 @@ void State::calculateNewF()
 
 		unsigned int p = box._Find_first();
 		do {
-			int i = INDEX_X(p),
-					j = INDEX_Y(p);
+			int i = INDEX_X(p), j = INDEX_Y(p);
 			h += heu[i][j][0];
 			int tdist = dist[pukoX][pukoY][i][j];
 			if(tdist < mindist) {
@@ -436,8 +435,7 @@ void State::calculateNewF()
 
 		unsigned int p = box._Find_first();
 		do {
-			int i = INDEX_X(p),
-					j = INDEX_Y(p);
+			int i = INDEX_X(p), j = INDEX_Y(p);
 
 			for(int t = 1; t <= ntarget; t++) {
 				cost[boxIndex][t - 1] = -heu[i][j][t];
