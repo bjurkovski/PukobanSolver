@@ -30,10 +30,12 @@ DYNLIB =
 #Other directories to update before compiling
 SUBDIR =
 
-#profiling
-prof:
-	gprof -c solver > profiling
+#all: $(EXECUTABLE)
 
-clean:
-	rm gmon.out -f
+#profiling
+#prof:
+	#gprof -c solver > profiling
+
+#clean:
+	#rm gmon.out -f
 

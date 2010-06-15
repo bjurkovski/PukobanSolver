@@ -3,7 +3,7 @@
 
 #define MAX_SIZE 25
 #define MAX_TARGET 10
-//#define DEBUG
+#define DEBUG
 
 #endif
 

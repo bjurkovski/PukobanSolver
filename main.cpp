@@ -77,7 +77,7 @@ bool isPull(Move m) {
 class State
 {
 public:
-	State() : f(0), g(0), h(0), trace(), pukoX(0), pukoY(0), box() { };
+	State() : f(0), g(0), h(0), move(-1), pukoX(0), pukoY(0), box(), father(NULL) { };
 	void read();
 	void print() const;
 	static Code meaning(char c);
@@ -87,14 +87,18 @@ public:
 	bool canMove(Move move);
 	void apply(Move move, State& child);
 	void calculateNewF();
+	int traceSize();
+	list<Move> trace() const;
 
 	friend class lessF;
 
 	int f, g, h;
-	list<Move> trace;
+	//list<Move> trace;
+	Move move;
 private:
 	int pukoX, pukoY;
 	bitset<MAX_SIZE*MAX_SIZE> box;
+	State *father;
 };
 
 Code board[MAX_SIZE][MAX_SIZE];
@@ -119,7 +123,8 @@ void State::print() const
 	printf("f: %5i\tg: %5i\th: %5i", f, g, h);
 	printf("\n");
 	printf("Path: ");
-	for(list<Move>::const_iterator it=trace.begin(); it!=trace.end(); it++)
+	list<Move> tr = trace();
+	for(list<Move>::const_iterator it=tr.begin(); it!=tr.end(); it++)
 		printf("%s ", moveStrings[*it]);
 	printf("\n");
 }
@@ -264,7 +269,8 @@ const State& State::operator=(const State& b)
 	h = b.h;
 	pukoX = b.pukoX;
 	pukoY = b.pukoY;
-	trace = b.trace;
+	father = b.father;
+	move = b.move;
 	box = b.box;
 	return *this;
 }
@@ -365,7 +371,8 @@ void State::apply(Move move, State& child)
 	// para minimizar número de movimentos do sukoban
 	child.g = g + 1;
 
-	child.trace.push_back(move);
+	child.father = this;
+	child.move = move;
 }
 
 void State::calculateNewF()
@@ -423,6 +430,28 @@ void State::calculateNewF()
 	f = g + h;
 }
 
+int State::traceSize()
+{
+	int res = 0;
+	State *f = father;
+	while(f) {
+		res++;
+		f = f->father;
+	}
+	return res;
+}
+
+list<Move> State::trace() const
+{
+	list<Move> res;
+	State *f = father;
+	while(f) {
+		res.push_back(f->move);
+		f = f->father;
+	}
+	return res;
+}
+
 list<Move> a_star(const State& start)
 {
 	int numStatesVisited=0;
@@ -468,12 +497,12 @@ list<Move> a_star(const State& start)
 					assert(numStatesVisited > 0);
 					double time = (double)(clock() - begin)/CLOCKS_PER_SEC;
 					printf("%lfs #time elapsed\n%i #total branching\n%lf #average branching\n%d #minimum branching\n%d #maximum branching\n%d #num visited\n%d #solution size\n",
-							time, (int) avgBranchingFactor, avgBranchingFactor / numStatesVisited, minBranchingFactor, maxBranchingFactor, numStatesVisited, child.trace.size());
+							time, (int) avgBranchingFactor, avgBranchingFactor / numStatesVisited, minBranchingFactor, maxBranchingFactor, numStatesVisited, child.traceSize());
 #ifndef DEBUG
 					// leva muito tempo desalocando a memória
 					exit(0);
 #endif
-					return child.trace; //return solution;
+					return child.trace(); //return solution;
 				}
 				set<State>::iterator cached = states.find(child);
 				if(cached == states.end()) {
@@ -547,3 +576,4 @@ int main(int argc, char **argv)
 #endif
 	return 0;
 }
+
