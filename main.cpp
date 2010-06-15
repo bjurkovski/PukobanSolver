@@ -25,6 +25,11 @@ using namespace std;
 #define INDEX_X(p) ((p) / MAX_SIZE)
 #define INDEX_Y(p) ((p) % MAX_SIZE)
 
+typedef unsigned long long Hash;
+#define HASH_SIZE (MAX_SIZE * MAX_SIZE / sizeof(Hash) + 1)
+#define HASH_INDEX(i) ((i) / sizeof(Hash))
+#define HASH_BIT(i) (((Hash) 1) << (i % sizeof(Hash)))
+
 enum {
 	ERROR_CODE=-1,
 	EMPTY = 0,
@@ -100,6 +105,7 @@ private:
 	int pukoX, pukoY;
 	bitset<MAX_SIZE*MAX_SIZE> box;
 	State *father;
+	Hash hash[HASH_SIZE];
 };
 
 Code board[MAX_SIZE][MAX_SIZE];
@@ -131,10 +137,17 @@ void State::print() const
 	}
 	printf("f: %5i\tg: %5i\th: %5i", f, g, h);
 	printf("\n");
+	printf("hash: ");
+	for(i = 0; i < (int)HASH_SIZE; i++) {
+		printf("%10lli ", hash[i]);
+	}
+	printf("\n");
 	printf("Path: ");
 	list<Move> tr = trace();
-	for(list<Move>::const_iterator it=tr.begin(); it!=tr.end(); it++)
+	for(list<Move>::const_iterator it=tr.begin(); it!=tr.end(); it++) {
+		assert(0 <= *it && *it < NMOVES);
 		printf("%s ", moveStrings[*it]);
+	}
 	printf("\n");
 }
 
@@ -281,6 +294,7 @@ const State& State::operator=(const State& b)
 	father = b.father;
 	move = b.move;
 	box = b.box;
+	memcpy(hash, b.hash, sizeof(hash));
 	return *this;
 }
 
@@ -291,6 +305,14 @@ bool State::operator<(const State& b) const
 	if(pukoY < b.pukoY) return true;
 	if(pukoY > b.pukoY) return false;
 
+	/*
+	for(unsigned int i = 0; i < HASH_SIZE; i++) {
+		if(hash[i] < b.hash[i]) return true;
+		if(hash[i] > b.hash[i]) return false;
+	}
+	//*/
+
+	//*
 	unsigned int l = box._Find_first(),
 			 				 r = b.box._Find_first();
 
@@ -301,6 +323,7 @@ bool State::operator<(const State& b) const
 		l = box._Find_next(l);
 		r = b.box._Find_next(r);
 	}
+	//*/
 
 	return false;
 }
@@ -436,6 +459,13 @@ void State::calculateNewF()
 	}
 
 	f = g + h;
+
+	// hash
+	unsigned int p = box._Find_first();
+	memset(hash, 0, sizeof(hash));
+	do {
+		hash[HASH_INDEX(p)] |= HASH_BIT(p);
+	} while((p = box._Find_next(p)) != box.size());
 }
 
 int State::traceSize()
@@ -452,9 +482,8 @@ int State::traceSize()
 list<Move> State::trace() const
 {
 	list<Move> res;
-	res.push_back(move);
-	State *f = father;
-	while(f) {
+	const State *f = this;
+	while(f->move != -1) {
 		res.push_back(f->move);
 		f = f->father;
 	}
