@@ -1,7 +1,7 @@
 # Default Makefile.spec
 
 #profiling
-PROF = -pg
+#PROF = -pg
 
 #Additional include paths
 INCLUDE +=
@@ -31,9 +31,8 @@ DYNLIB =
 SUBDIR =
 
 #profiling
-prof:
-	gprof -c solver > profiling
+#prof:
+#	gprof -c solver > profiling
 
-clean:
-	rm gmon.out -f
-
+#clean:
+#	rm gmon.out -f
