@@ -1,7 +1,7 @@
 # Default Makefile.spec
 
 #profiling
-PROF = -pg
+#PROF = -pg
 
 #Additional include paths
 INCLUDE +=
@@ -34,8 +34,7 @@ SUBDIR =
 
 #profiling
 #prof:
-	#gprof -c solver > profiling
+#	gprof -c solver > profiling
 
 #clean:
-	#rm gmon.out -f
-
+#	rm gmon.out -f

@@ -85,7 +85,7 @@ public:
 	bool operator<(const State& b) const;
 	bool isGoal();
 	bool canMove(Move move);
-	void apply(Move move, State& child);
+	void apply(Move move, State* child);
 	void calculateNewF();
 	int traceSize();
 	list<Move> trace() const;
@@ -107,8 +107,16 @@ static int m, n;
 class lessF
 {
 public:
-	bool operator()(const State& l, const State& r) {
-		return l.f > r.f;
+	bool operator()(const State* l, const State* r) {
+		return l->f > r->f;
+	}
+};
+
+class lessBoard
+{
+public:
+	bool operator()(const State* l, const State* r) {
+		return *l < *r;
 	}
 };
 
@@ -284,7 +292,7 @@ bool State::operator<(const State& b) const
 
 	unsigned int l = box._Find_first(),
 			 				 r = b.box._Find_first();
-	
+
 	while(1) {
 		if(l < r) return false;     // 1 == box[l] > b.box[l] == 0
 		else if(r < l) return true; // 0 == box[r] < b.box[r] == 1
@@ -335,9 +343,9 @@ bool State::canMove(Move move)
 	return true;
 }
 
-void State::apply(Move move, State& child)
+void State::apply(Move move, State* child)
 {
-	child = *this;
+	*child = *this;
 	int nextX = pukoX + moves[move][X];
 	int nextY = pukoY + moves[move][Y];
 	bool isBoxMove = false;
@@ -347,8 +355,8 @@ void State::apply(Move move, State& child)
 			int nextNextX = nextX + moves[move][X];
 			int nextNextY = nextY + moves[move][Y];
 
-			child.box[INDEX(nextX, nextY)] = 0;
-			child.box[INDEX(nextNextX, nextNextY)] = 1;
+			child->box[INDEX(nextX, nextY)] = 0;
+			child->box[INDEX(nextNextX, nextNextY)] = 1;
 
 			isBoxMove = true;
 		}
@@ -357,22 +365,22 @@ void State::apply(Move move, State& child)
 		int boxX = pukoX - moves[move][X];
 		int boxY = pukoY - moves[move][Y];
 
-		child.box[INDEX(boxX, boxY)] = 0;
-		child.box[INDEX(pukoX, pukoY)] = 1;
+		child->box[INDEX(boxX, boxY)] = 0;
+		child->box[INDEX(pukoX, pukoY)] = 1;
 
 		isBoxMove = true;
 	}
 
-	child.pukoX = nextX;
-	child.pukoY = nextY;
+	child->pukoX = nextX;
+	child->pukoY = nextY;
 
 	// para minimizar número de movimentos de caixas
-	//child.g = g + isBoxMove;
+	//child->g = g + isBoxMove;
 	// para minimizar número de movimentos do sukoban
-	child.g = g + 1;
+	child->g = g + 1;
 
-	child.father = this;
-	child.move = move;
+	child->father = this;
+	child->move = move;
 }
 
 void State::calculateNewF()
@@ -452,7 +460,7 @@ list<Move> State::trace() const
 	return res;
 }
 
-list<Move> a_star(const State& start)
+list<Move> a_star(State* start)
 {
 	int numStatesVisited=0;
 	double avgBranchingFactor=0.0;
@@ -461,14 +469,14 @@ list<Move> a_star(const State& start)
 	int possibleMoves=0;
 	clock_t begin = clock();
 
-	priority_queue<State, vector<State>, lessF> open;
-	set<State> states;
+	priority_queue<State*, vector<State*>, lessF> open;
+	set<State*, lessBoard> states;
 	open.push(start);
 	states.insert(start);
 	while(!open.empty()) {
-		State best = open.top();
+		State* best = open.top();
 		open.pop();
-		if(states.find(best)->g < best.g) {
+		if((*(states.find(best)))->g < best->g) {
 			continue;
 		}
 		numStatesVisited++;
@@ -476,42 +484,42 @@ list<Move> a_star(const State& start)
 		//if(numStatesVisited%10000 == 0) printf("."); //best.print();
 #else
 		printf("[%d](queue size: %d) Best in the queue:\n", numStatesVisited, open.size()+1);
-		best.print();
+		best->print();
 		sleep(SLEEP_TIME);
 #endif
 		possibleMoves=0;
 		for(int m=movesBegin; m<movesEnd; m++) {
-			if(best.canMove((Move)m)) {
+			if(best->canMove((Move)m)) {
 				possibleMoves++;
 				#ifdef DEBUG
 				printf("canMove! - %s\n", moveStrings[m]);
 				#endif
-				State child;
-				best.apply(m, child);
-				//child.calculateNewF();
-				if (child.isGoal()) {
+				State* child = new State();
+				best->apply(m, child);
+
+				if (child->isGoal()) {
 #ifdef DEBUG
 					printf("isGoal()\n");
-					child.print();
+					child->print();
 #endif
 					assert(numStatesVisited > 0);
 					double time = (double)(clock() - begin)/CLOCKS_PER_SEC;
 					printf("%lfs #time elapsed\n%i #total branching\n%lf #average branching\n%d #minimum branching\n%d #maximum branching\n%d #num visited\n%d #solution size\n",
-							time, (int) avgBranchingFactor, avgBranchingFactor / numStatesVisited, minBranchingFactor, maxBranchingFactor, numStatesVisited, child.traceSize());
+							time, (int) avgBranchingFactor, avgBranchingFactor / numStatesVisited, minBranchingFactor, maxBranchingFactor, numStatesVisited, child->traceSize());
 #ifndef DEBUG
 					// leva muito tempo desalocando a memória
 					exit(0);
 #endif
-					return child.trace(); //return solution;
+					return child->trace(); //return solution;
 				}
-				set<State>::iterator cached = states.find(child);
+				set<State*>::iterator cached = states.find(child);
 				if(cached == states.end()) {
-					child.calculateNewF();
+					child->calculateNewF();
 					states.insert(child);
 					open.push(child);
-				} else if(cached->g > child.g) {
+				} else if((*cached)->g > child->g) {
 					states.erase(cached);
-					child.calculateNewF();
+					child->calculateNewF();
 					states.insert(child);
 					open.push(child);
 				}
@@ -521,15 +529,15 @@ list<Move> a_star(const State& start)
 				if(cached == states.end()) {
 					printf("  new\n");
 				} else {
-					printf("  cached->g: %i, child.g: %i\n", cached->g, child.g);
+					printf("  cached->g: %i, child->g: %i\n", (*cached)->g, child->g);
 				}
-				child.print();
+				child->print();
 #endif
 
 #ifdef DEBUG
 				printf("States:\n");
-				for(set<State>::iterator i = states.begin(); i != states.end(); ++i) {
-					i->print();
+				for(set<State*>::iterator i = states.begin(); i != states.end(); ++i) {
+					(*i)->print();
 				}
 #endif
 			}
@@ -567,7 +575,7 @@ int main(int argc, char **argv)
 		else if(!strcmp(argv[3], "min-distance"))
 			heuristic = MIN_DISTANCE;
 	}
-	list<Move> solution = a_star(b);
+	list<Move> solution = a_star(&b);
 #ifdef DEBUG
 	printf("Solution:\n");
 	for(list<Move>::iterator it=solution.begin(); it!=solution.end(); it++)
