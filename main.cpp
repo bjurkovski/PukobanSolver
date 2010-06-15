@@ -9,6 +9,7 @@
 #include <ctime>
 #include <climits>
 #include <bitset>
+#include <algorithm>
 
 using namespace std;
 
@@ -451,11 +452,13 @@ int State::traceSize()
 list<Move> State::trace() const
 {
 	list<Move> res;
+	res.push_back(move);
 	State *f = father;
 	while(f) {
 		res.push_back(f->move);
 		f = f->father;
 	}
+	reverse(res.begin(), res.end());
 	return res;
 }
 
