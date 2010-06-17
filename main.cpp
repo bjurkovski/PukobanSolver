@@ -16,7 +16,9 @@ using namespace std;
 #include "constraints.h"
 #include "match.h"
 
+#define MAX_SIZE 25
 #define SLEEP_TIME 1//3
+//#define WITH_HASH
 
 #define X 0
 #define Y 1
@@ -95,6 +97,7 @@ public:
 	void calculateNewF();
 	int traceSize();
 	list<Move> trace() const;
+	void showSolution(list<Move> l);
 
 	friend class lessF;
 
@@ -105,7 +108,9 @@ private:
 	int pukoX, pukoY;
 	bitset<MAX_SIZE*MAX_SIZE> box;
 	State *father;
+#ifdef WITH_HASH
 	Hash hash[HASH_SIZE];
+#endif
 };
 
 Code board[MAX_SIZE][MAX_SIZE];
@@ -137,11 +142,13 @@ void State::print() const
 	}
 	printf("f: %5i\tg: %5i\th: %5i", f, g, h);
 	printf("\n");
+#ifdef WITH_HASH
 	printf("hash: ");
 	for(i = 0; i < (int)HASH_SIZE; i++) {
 		printf("%10lli ", hash[i]);
 	}
 	printf("\n");
+#endif
 	printf("Path: ");
 	list<Move> tr = trace();
 	for(list<Move>::const_iterator it=tr.begin(); it!=tr.end(); it++) {
@@ -294,7 +301,9 @@ const State& State::operator=(const State& b)
 	father = b.father;
 	move = b.move;
 	box = b.box;
+#ifdef WITH_HASH
 	memcpy(hash, b.hash, sizeof(hash));
+#endif
 	return *this;
 }
 
@@ -305,14 +314,12 @@ bool State::operator<(const State& b) const
 	if(pukoY < b.pukoY) return true;
 	if(pukoY > b.pukoY) return false;
 
-	/*
+#ifdef WITH_HASH
 	for(unsigned int i = 0; i < HASH_SIZE; i++) {
 		if(hash[i] < b.hash[i]) return true;
 		if(hash[i] > b.hash[i]) return false;
 	}
-	//*/
-
-	//*
+#else
 	unsigned int l = box._Find_first(),
 			 				 r = b.box._Find_first();
 
@@ -323,7 +330,7 @@ bool State::operator<(const State& b) const
 		l = box._Find_next(l);
 		r = b.box._Find_next(r);
 	}
-	//*/
+#endif
 
 	return false;
 }
@@ -458,12 +465,13 @@ void State::calculateNewF()
 
 	f = g + h;
 
-	// hash
+#ifdef WITH_HASH
 	unsigned int p = box._Find_first();
 	memset(hash, 0, sizeof(hash));
 	do {
 		hash[HASH_INDEX(p)] |= HASH_BIT(p);
 	} while((p = box._Find_next(p)) != box.size());
+#endif
 }
 
 int State::traceSize()
@@ -487,6 +495,20 @@ list<Move> State::trace() const
 	}
 	reverse(res.begin(), res.end());
 	return res;
+}
+
+void State::showSolution(list<Move> solution)
+{
+	State *cur;
+	cur = this;
+	for(list<Move>::iterator it=solution.begin(); it!=solution.end(); it++) {
+		State *temp = new State();
+		cur->print();
+		cur->apply(*it, temp);
+		temp->calculateNewF();
+		cur = temp;
+	}
+	cur->print();
 }
 
 list<Move> a_star(State* start)
@@ -535,10 +557,6 @@ list<Move> a_star(State* start)
 					double time = (double)(clock() - begin)/CLOCKS_PER_SEC;
 					printf("%lfs #time elapsed\n%i #total branching\n%lf #average branching\n%d #minimum branching\n%d #maximum branching\n%d #num visited\n%d #solution size\n",
 							time, (int) avgBranchingFactor, avgBranchingFactor / numStatesVisited, minBranchingFactor, maxBranchingFactor, numStatesVisited, child->traceSize());
-#ifndef DEBUG
-					// leva muito tempo desalocando a memória
-					exit(0);
-#endif
 					return child->trace(); //return solution;
 				}
 				set<State*>::iterator cached = states.find(child);
@@ -593,23 +611,33 @@ int main(int argc, char **argv)
 	b.print();
 #endif
 	if(argc>=3) {
-		if(!strcmp(argv[2], "push-only"))
+		if(!strcmp(argv[2], "push-only")) {
+			printf("push-only\n");
 			movesEnd /= 2;
-		else if(!strcmp(argv[2], "pull-only"))
-			movesBegin += 4;
+		} else if(!strcmp(argv[2], "pull-only")) {
+			printf("pull-only\n");
+			printf("not implemented!\n");
+			exit(1);
+			//movesBegin += 4; não adianta fazer isso porque ele fica sem poder se mover
+		}
 	}
 	if(argc==4) {
-		if(!strcmp(argv[3], "match"))
+		if(!strcmp(argv[3], "match")) {
+			printf("match\n");
 			heuristic = MATCH;
-		else if(!strcmp(argv[3], "min-distance"))
+		} else if(!strcmp(argv[3], "min-distance")) {
+			printf("min-distance\n");
 			heuristic = MIN_DISTANCE;
+		}
 	}
 	list<Move> solution = a_star(&b);
-#ifdef DEBUG
+//#ifdef DEBUG 
 	printf("Solution:\n");
+	int i = 0;
 	for(list<Move>::iterator it=solution.begin(); it!=solution.end(); it++)
-		printf("%s\n", moveStrings[*it]);
+		printf("%i: %s\n", i++, moveStrings[*it]);
 	printf("\n");
-#endif
+//#endif
+	b.showSolution(solution);
 	return 0;
 }

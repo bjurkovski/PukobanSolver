@@ -5,7 +5,7 @@
 
 using namespace std;
 
-#define N MAX_SIZE       //max number of vertices in one part
+#define N MAX_TARGET     //max number of vertices in one part
 #define INF 100000000    //just infinity
 
 int n, max_match;        //n workers and n jobs
