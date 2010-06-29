@@ -1,7 +1,9 @@
 #!/bin/bash
-for i in {0..9}
+for i in {0..11}
 do
 	echo "Running level $i..."
-	./solver "levels/0$i.txt" > "levels/out/$i.out"
+	./solver "levels/$i.txt" > "levels/out/site-$i-puko-moves"
+	./solver "levels/$i.txt" box-moves > "levels/out/site-$i-box-moves"
+	#./solver "levels/$i.txt" push-only > "levels/out/site-$i-puko-moves-push-only"
+	#./solver "levels/$i.txt" box-moves push-only > "levels/out/site-$i-box-moves-push-only"
 done
-./solver "levels/10.txt" > levels/out/10.out

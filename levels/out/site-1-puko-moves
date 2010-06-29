@@ -4,4 +4,5 @@
 1 #minimum branching
 6 #maximum branching
 2485 #num visited
-127 #solution size
+127 #puko moves
+52 #box_moves

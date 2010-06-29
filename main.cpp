@@ -648,8 +648,8 @@ int main(int argc, char **argv)
 	for(list<Move>::iterator it=solution.begin(); it!=solution.end(); it++)
 		printf("%i: %s\n", i++, moveStrings[*it]);
 	printf("\n");
-#endif
 	b.showSolution(solution);
+#endif
 	return 0;
 }
 

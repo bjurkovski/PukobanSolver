@@ -6,7 +6,7 @@ if(len(sys.argv) < 3):
 else:
 	output = sys.argv[2]
 	out = open(output, 'w')
-	out.write("Instancia,Tempo,Total Branching,Average Branching, Min Branching, Max Branching,States Visited,Solution Length\n")
+	out.write("Instancia,Tempo,Total Branching,Average Branching, Min Branching, Max Branching,States Visited,Puko Moves,Box Moves\n")
 
 	dirpath = sys.argv[1]
 	files = dircache.listdir(dirpath)
