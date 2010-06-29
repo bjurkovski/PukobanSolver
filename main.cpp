@@ -608,7 +608,7 @@ int main(int argc, char **argv)
 	assert(freopen(argv[1], "r", stdin));
 	b.read();
 #ifndef DEBUG
-	b.print();
+	//b.print();
 #endif
 	if(argc>=3) {
 		if(!strcmp(argv[2], "push-only")) {
@@ -631,13 +631,13 @@ int main(int argc, char **argv)
 		}
 	}
 	list<Move> solution = a_star(&b);
-//#ifdef DEBUG 
+#ifdef DEBUG 
 	printf("Solution:\n");
 	int i = 0;
 	for(list<Move>::iterator it=solution.begin(); it!=solution.end(); it++)
 		printf("%i: %s\n", i++, moveStrings[*it]);
 	printf("\n");
-//#endif
-	b.showSolution(solution);
+#endif
+	//b.showSolution(solution);
 	return 0;
 }

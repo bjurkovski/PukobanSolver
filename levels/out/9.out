@@ -1,6 +1,7 @@
-268870 #total branching
-2.428378 #average branching
+0.990000s #time elapsed
+268860 #total branching
+2.428397 #average branching
 1 #minimum branching
 6 #maximum branching
-110720 #num visited
+110715 #num visited
 238 #solution size
