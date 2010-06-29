@@ -71,12 +71,15 @@ static const int moves[NMOVES][2] = {{0,1}, {-1,0}, {0,-1}, {1,0}, {0,1}, {-1,0}
 static const char moveStrings[NMOVES][30] = {"Going right", "Going up", "Going left", "Going down",
 											  "Pulling right", "Pulling up", "Pulling left", "Pulling down"};
 
-enum {
+static enum Heuristic {
 	MIN_DISTANCE,
 	MATCH
-};
+} heuristic = MATCH;
 
-static int heuristic = MATCH;
+static enum Criteria {
+	PUKO_MOVES,
+	BOX_MOVES
+} criteria = PUKO_MOVES;
 
 bool isPull(Move m) {
 	return (m >= PULL_UP);
@@ -85,7 +88,7 @@ bool isPull(Move m) {
 class State
 {
 public:
-	State() : f(0), g(0), h(0), move(-1), pukoX(0), pukoY(0), box(), father(NULL) { };
+	State() : f(0), g(0), h(0), puko_moves(0), box_moves(0), move(-1), pukoX(0), pukoY(0), box(), father(NULL) { };
 	void read();
 	void print() const;
 	static Code meaning(char c);
@@ -102,6 +105,7 @@ public:
 	friend class lessF;
 
 	int f, g, h;
+	int puko_moves, box_moves;
 	//list<Move> trace;
 	Move move;
 private:
@@ -140,7 +144,7 @@ void State::print() const
 			printf("%c", i == pukoX && j == pukoY ? board[i][j] == EMPTY ? input_codes[PKB] : input_codes[PKB_OVER_TARGET]  : box[INDEX(i, j)] ? board[i][j] == TARGET ? input_codes[BOX_OVER_TARGET] : input_codes[BOX] : input_codes[board[i][j]]);
 		printf("\n");
 	}
-	printf("f: %5i\tg: %5i\th: %5i", f, g, h);
+	printf("f: %5i\tg: %5i\th: %5i\tpm: %5i\tbm: %5i", f, g, h, puko_moves, box_moves);
 	printf("\n");
 #ifdef WITH_HASH
 	printf("hash: ");
@@ -301,6 +305,8 @@ const State& State::operator=(const State& b)
 	father = b.father;
 	move = b.move;
 	box = b.box;
+	puko_moves = b.puko_moves;
+	box_moves = b.box_moves;
 #ifdef WITH_HASH
 	memcpy(hash, b.hash, sizeof(hash));
 #endif
@@ -405,10 +411,14 @@ void State::apply(Move move, State* child)
 	child->pukoX = nextX;
 	child->pukoY = nextY;
 
-	// para minimizar número de movimentos de caixas
-	//child->g = g + isBoxMove;
-	// para minimizar número de movimentos do sukoban
-	child->g = g + 1;
+	child->puko_moves++;
+	child->box_moves += isBoxMove;
+
+	if(criteria == PUKO_MOVES) {
+		child->g = g + 1;
+	} else if(criteria == BOX_MOVES) {
+		child->g = g + isBoxMove;
+	}
 
 	child->father = this;
 	child->move = move;
@@ -555,8 +565,8 @@ list<Move> a_star(State* start)
 #endif
 					assert(numStatesVisited > 0);
 					double time = (double)(clock() - begin)/CLOCKS_PER_SEC;
-					printf("%lfs #time elapsed\n%i #total branching\n%lf #average branching\n%d #minimum branching\n%d #maximum branching\n%d #num visited\n%d #solution size\n",
-							time, (int) avgBranchingFactor, avgBranchingFactor / numStatesVisited, minBranchingFactor, maxBranchingFactor, numStatesVisited, child->traceSize());
+					printf("%lfs #time elapsed\n%i #total branching\n%lf #average branching\n%d #minimum branching\n%d #maximum branching\n%d #num visited\n%d #puko moves\n%d #box_moves\n",
+							time, (int) avgBranchingFactor, avgBranchingFactor / numStatesVisited, minBranchingFactor, maxBranchingFactor, numStatesVisited, child->puko_moves, child->box_moves);
 					return child->trace(); //return solution;
 				}
 				set<State*>::iterator cached = states.find(child);
@@ -601,8 +611,9 @@ int main(int argc, char **argv)
 	setbuf(stdout, NULL);
 
 	State b;
-	if(argc < 2 && argc > 4) {
-		printf("Usage: %s <file_name> [push-only/pull-only] [match/min-distance]\n", argv[0]);
+	if(argc < 2 && argc > 5) {
+		printf("Usage: %s <file_name> [push-pull/push-pull] [match/min-distance] [puko-moves/box-moves]\n", argv[0]);
+		printf("Default: push-pull match puko-moves\n");
 		exit(1);
 	}
 	assert(freopen(argv[1], "r", stdin));
@@ -610,26 +621,26 @@ int main(int argc, char **argv)
 #ifndef DEBUG
 	//b.print();
 #endif
-	if(argc>=3) {
-		if(!strcmp(argv[2], "push-only")) {
-			printf("push-only\n");
-			movesEnd /= 2;
-		} else if(!strcmp(argv[2], "pull-only")) {
-			printf("pull-only\n");
-			printf("not implemented!\n");
-			exit(1);
-			//movesBegin += 4; não adianta fazer isso porque ele fica sem poder se mover
-		}
-	}
-	if(argc==4) {
-		if(!strcmp(argv[3], "match")) {
-			printf("match\n");
+	
+	for(int i = 2; i < argc; i++) {
+		if(!strcmp(argv[i], "push-pull")) {
+			movesEnd = NMOVES;
+		} else if(!strcmp(argv[i], "push-only")) {
+			movesEnd = NMOVES / 2;
+		} else if(!strcmp(argv[i], "match")) {
 			heuristic = MATCH;
-		} else if(!strcmp(argv[3], "min-distance")) {
-			printf("min-distance\n");
+		} else if(!strcmp(argv[i], "min-distance")) {
 			heuristic = MIN_DISTANCE;
+		} else if(!strcmp(argv[i], "puko-moves")) {
+			criteria = PUKO_MOVES;
+		} else if(!strcmp(argv[i], "box-moves")) {
+			criteria = BOX_MOVES;
+		} else {
+			printf("Option %s doesn't exist!\n", argv[i]);
+			exit(1);
 		}
 	}
+			
 	list<Move> solution = a_star(&b);
 #ifdef DEBUG 
 	printf("Solution:\n");
@@ -638,6 +649,7 @@ int main(int argc, char **argv)
 		printf("%i: %s\n", i++, moveStrings[*it]);
 	printf("\n");
 #endif
-	//b.showSolution(solution);
+	b.showSolution(solution);
 	return 0;
 }
+
