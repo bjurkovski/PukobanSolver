@@ -542,10 +542,7 @@ list<Move> a_star(State* start)
 	open.push(start);
 	states.insert(start);
 	while(!open.empty()) {
-		if((double)(clock()-begin)/CLOCKS_PER_SEC >= toSeconds(TIME_LIMIT)) {
-			printf("TIME LIMIT\n");
-			exit(0);
-		}
+		if((double)(clock()-begin)/CLOCKS_PER_SEC >= toSeconds(TIME_LIMIT)) { printf("time limit (%.2lf minutes)\n", TIME_LIMIT); exit(0); }
 		State* best = open.top();
 		open.pop();
 		if((*(states.find(best)))->g < best->g) {
