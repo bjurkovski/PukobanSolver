@@ -19,7 +19,7 @@ using namespace std;
 #define MAX_SIZE 25
 #define SLEEP_TIME 1//3
 //time limit in minutes
-#define TIME_LIMIT 7.0
+double TIME_LIMIT = 1.0;
 //#define WITH_HASH
 
 #define X 0
@@ -550,7 +550,7 @@ list<Move> a_star(State* start)
 		}
 		numStatesVisited++;
 #ifndef DEBUG
-		if(numStatesVisited%100000 == 0) printf("."); //best.print();
+		//if(numStatesVisited%100000 == 0) printf("."); //best.print();
 #else
 		printf("[%d](queue size: %d) Best in the queue:\n", numStatesVisited, open.size()+1);
 		best->print();
@@ -619,18 +619,19 @@ int main(int argc, char **argv)
 	setbuf(stdout, NULL);
 
 	State b;
-	if(argc < 2 && argc > 5) {
-		printf("Usage: %s <file_name> [push-pull/push-pull] [match/min-distance] [puko-moves/box-moves]\n", argv[0]);
+	if(argc < 3 || argc > 6 || (argc >= 3 && atof(argv[2]) <= 0.001)) {
+		printf("Usage: %s <file_name> <max_time> [push-pull/push-pull] [match/min-distance] [puko-moves/box-moves]\n", argv[0]);
 		printf("Default: push-pull match puko-moves\n");
 		exit(1);
 	}
 	assert(freopen(argv[1], "r", stdin));
+	TIME_LIMIT = atof(argv[2]);
 	b.read();
 #ifndef DEBUG
 	//b.print();
 #endif
 	
-	for(int i = 2; i < argc; i++) {
+	for(int i = 3; i < argc; i++) {
 		if(!strcmp(argv[i], "push-pull")) {
 			movesEnd = NMOVES;
 		} else if(!strcmp(argv[i], "push-only")) {

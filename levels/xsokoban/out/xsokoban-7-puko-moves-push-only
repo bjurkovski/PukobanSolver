@@ -1,1 +1,2 @@
-time limit (0.00 minutes)
+Usage: ./solver <file_name> <max_time> [push-pull/push-pull] [match/min-distance] [puko-moves/box-moves]
+Default: push-pull match puko-moves
