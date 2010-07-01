@@ -19,7 +19,7 @@ using namespace std;
 #define MAX_SIZE 25
 #define SLEEP_TIME 1//3
 //time limit in minutes
-#define TIME_LIMIT 0.001
+#define TIME_LIMIT 7.0
 //#define WITH_HASH
 
 #define X 0

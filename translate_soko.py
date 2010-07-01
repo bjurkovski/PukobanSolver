@@ -10,7 +10,10 @@ else:
 	puko = open(sys.argv[2], 'w')
 
 	lines = soko.readlines()
-	maxSize = len(max(lines)) - 1
+	maxSize = 0
+	for line in lines:
+		maxSize = max(len(line), maxSize)
+
 	for line in lines:
 		line = line.translate(translationTable)
 		for i in range(maxSize):
