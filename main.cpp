@@ -19,7 +19,7 @@ using namespace std;
 #define MAX_SIZE 25
 #define SLEEP_TIME 1//3
 //time limit in minutes
-#define TIME_LIMIT 7
+#define TIME_LIMIT 0.001
 //#define WITH_HASH
 
 #define X 0
@@ -542,7 +542,10 @@ list<Move> a_star(State* start)
 	open.push(start);
 	states.insert(start);
 	while(!open.empty()) {
-		if((double)(clock()-begin)/CLOCKS_PER_SEC >= toSeconds(TIME_LIMIT)) exit(0);
+		if((double)(clock()-begin)/CLOCKS_PER_SEC >= toSeconds(TIME_LIMIT)) {
+			printf("TIME LIMIT\n");
+			exit(0);
+		}
 		State* best = open.top();
 		open.pop();
 		if((*(states.find(best)))->g < best->g) {
@@ -550,7 +553,7 @@ list<Move> a_star(State* start)
 		}
 		numStatesVisited++;
 #ifndef DEBUG
-		//if(numStatesVisited%10000 == 0) printf("."); //best.print();
+		if(numStatesVisited%100000 == 0) printf("."); //best.print();
 #else
 		printf("[%d](queue size: %d) Best in the queue:\n", numStatesVisited, open.size()+1);
 		best->print();
