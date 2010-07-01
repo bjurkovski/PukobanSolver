@@ -14,12 +14,8 @@ else:
 		f = open(dirpath+"/"+filename)
 		lines = f.readlines();
 	
-		out.write(filename)
-		for l in lines:
-			words = l.split()
-			out.write(",")
-			out.write(words[0])
-		out.write("\n")
+		out.write(dirpath+"/"+filename+",")
+		out.write(lines[0])
 
 		f.close()
 	out.close()

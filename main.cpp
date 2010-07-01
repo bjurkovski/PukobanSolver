@@ -18,6 +18,8 @@ using namespace std;
 
 #define MAX_SIZE 25
 #define SLEEP_TIME 1//3
+//time limit in minutes
+#define TIME_LIMIT 7
 //#define WITH_HASH
 
 #define X 0
@@ -521,6 +523,11 @@ void State::showSolution(list<Move> solution)
 	cur->print();
 }
 
+double toSeconds(double minutes)
+{
+	return minutes*60;
+}
+
 list<Move> a_star(State* start)
 {
 	int numStatesVisited=0;
@@ -535,6 +542,7 @@ list<Move> a_star(State* start)
 	open.push(start);
 	states.insert(start);
 	while(!open.empty()) {
+		if((double)(clock()-begin)/CLOCKS_PER_SEC >= toSeconds(TIME_LIMIT)) exit(0);
 		State* best = open.top();
 		open.pop();
 		if((*(states.find(best)))->g < best->g) {
@@ -565,8 +573,8 @@ list<Move> a_star(State* start)
 #endif
 					assert(numStatesVisited > 0);
 					double time = (double)(clock() - begin)/CLOCKS_PER_SEC;
-					printf("%lfs #time elapsed\n%i #total branching\n%lf #average branching\n%d #minimum branching\n%d #maximum branching\n%d #num visited\n%d #puko moves\n%d #box_moves\n",
-							time, (int) avgBranchingFactor, avgBranchingFactor / numStatesVisited, minBranchingFactor, maxBranchingFactor, numStatesVisited, child->puko_moves, child->box_moves);
+					//printf("%lfs #time elapsed\n%i #total branching\n%lf #average branching\n%d #minimum branching\n%d #maximum branching\n%d #num visited\n%d #puko moves\n%d #box_moves\n", time, (int) avgBranchingFactor, avgBranchingFactor / numStatesVisited, minBranchingFactor, maxBranchingFactor, numStatesVisited, child->puko_moves, child->box_moves);
+					printf("%lf,%i,%lf,%d,%d,%d,%d,%d\n", time, (int) avgBranchingFactor, avgBranchingFactor / numStatesVisited, minBranchingFactor, maxBranchingFactor, numStatesVisited, child->puko_moves, child->box_moves);
 					return child->trace(); //return solution;
 				}
 				set<State*>::iterator cached = states.find(child);
