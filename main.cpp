@@ -18,6 +18,7 @@ using namespace std;
 
 #define MAX_SIZE 25
 #define SLEEP_TIME 1//3
+#define MAX_BRANCH 50
 //time limit in minutes
 double TIME_LIMIT = 1.0;
 //#define WITH_HASH
@@ -67,7 +68,8 @@ enum {
 };
 
 typedef int Move;
-typedef Move MoveList[NMOVES];
+typedef Move MoveList[MAX_BRANCH];
+typedef bitset<MAX_SIZE * MAX_SIZE> BitBoard;
 
 static int movesBegin=0;
 static int movesEnd=NMOVES;
@@ -85,6 +87,9 @@ static enum Criteria {
 	BOX_MOVES
 } criteria = PUKO_MOVES;
 
+bool component = false;
+BitBoard gone;
+
 bool isPull(Move m) {
 	return (m >= PULL_UP);
 }
@@ -100,6 +105,7 @@ public:
 	bool operator<(const State& b) const;
 	bool isGoal();
 	bool canMove(Move move);
+	bool canMoveBox(Move move, int cx, int cy);
 	void apply(Move move, State* child);
 	void calculateNewF();
 	int traceSize();
@@ -108,6 +114,7 @@ public:
 	// coloca movimentos possíveis em to
 	// retorna quantidade de movimentos possíveis
 	int getPossibleMoves(MoveList &to); 
+	int getPossibleMovesComponent(MoveList &to, int curRes, int cx, int cy);
 
 	friend class lessF;
 
@@ -117,7 +124,7 @@ public:
 	Move move;
 private:
 	int pukoX, pukoY;
-	bitset<MAX_SIZE*MAX_SIZE> box;
+	BitBoard box;
 	State *father;
 #ifdef WITH_HASH
 	Hash hash[HASH_SIZE];
@@ -387,6 +394,35 @@ bool State::canMove(Move move)
 	return true;
 }
 
+bool State::canMoveBox(Move move, int cx, int cy)
+{
+	int nextX = cx + moves[move][X];
+	int nextY = cy + moves[move][Y];
+
+	if(board[nextX][nextY] == WALL)
+		return false;
+
+	if(!isPull(move)) {
+		if(box[INDEX(nextX, nextY)]) {
+			int nextNextX = nextX + moves[move][X];
+			int nextNextY = nextY + moves[move][Y];
+
+			if(board[nextNextX][nextNextY] == WALL || box[INDEX(nextNextX, nextNextY)])
+				return false;
+		} else {
+			return false;
+		}
+	} else {
+		int boxX = cx - moves[move][X];
+		int boxY = cy - moves[move][Y];
+
+		if(!box[INDEX(boxX, boxY)] || box[INDEX(nextX, nextY)])
+			return false;
+	}
+
+	return true;
+}
+
 void State::apply(Move move, State* child)
 {
 	*child = *this;
@@ -530,13 +566,48 @@ void State::showSolution(list<Move> solution)
 
 int State::getPossibleMoves(MoveList &to)
 {
-	int res = 0;
-	for(int m = movesBegin; m < movesEnd; m++) {
-		if(canMove(m)) {
-			to[res++] = m;
+	if(!component) {
+		int res = 0;
+		for(int m = movesBegin; m < movesEnd; m++) {
+			if(canMove(m)) {
+				to[res++] = m;
+			}
+		}
+		return res;
+	} else {
+		gone.reset();
+		//TODO to virar global, para não ficar passando
+		return getPossibleMovesComponent(to, 0, pukoX, pukoY);
+	}
+}
+
+int State::getPossibleMovesComponent(MoveList &to, int curRes, int cx, int cy)
+{
+	printf("%s(%i, %i, %i)\n", __FUNCTION__, curRes, cx, cy);
+
+	gone[INDEX(cx, cy)] = 1;
+
+	bool movedFromHere = false;
+	for(int d = 0; d < 4; d++) {
+		int nx = cx + moves[d][0],
+				ny = cy + moves[d][1];
+		if(!gone[INDEX(nx, ny)] && board[nx][ny] != WALL) {
+			if(box[INDEX(nx, ny)] && !movedFromHere) {
+				movedFromHere = true;
+				printf("moving from (%i, %i)!\n", cx, cy);
+				for(int m = movesBegin; m < movesEnd; m++) {
+					if(canMoveBox(m, cx, cy)) {
+						printf("  can move to %s (%i)\n", moveStrings[m], curRes);
+						to[curRes++] = m; //Move(cx, cy, m);
+					}
+				}
+			} else {
+				curRes = getPossibleMovesComponent(to, curRes, nx, ny);
+			}
 		}
 	}
-	return res;
+
+	return 0;
 }
 
 double toSeconds(double minutes)
@@ -627,6 +698,7 @@ list<Move> a_star(State* start)
 		minBranchingFactor = min(minBranchingFactor, numPossibleMoves);
 		maxBranchingFactor = max(maxBranchingFactor, numPossibleMoves);
 	}
+	printf("search ended!\n");
 	return list<Move>(0, 0);
 }
 
@@ -636,7 +708,7 @@ int main(int argc, char **argv)
 
 	State b;
 	if(argc < 3 || argc > 6 || (argc >= 3 && atof(argv[2]) <= 0.001)) {
-		printf("Usage: %s <file_name> <max_time> [push-pull/push-pull] [match/min-distance] [puko-moves/box-moves]\n", argv[0]);
+		printf("Usage: %s <file_name> <max_time> [push-pull/push-pull] [match/min-distance] [puko-moves/box-moves] [component]\n", argv[0]);
 		printf("Default: push-pull match puko-moves\n");
 		exit(1);
 	}
@@ -660,6 +732,8 @@ int main(int argc, char **argv)
 			criteria = PUKO_MOVES;
 		} else if(!strcmp(argv[i], "box-moves")) {
 			criteria = BOX_MOVES;
+		} else if(!strcmp(argv[i], "component")) {
+			component = true;
 		} else {
 			printf("Option %s doesn't exist!\n", argv[i]);
 			exit(1);
