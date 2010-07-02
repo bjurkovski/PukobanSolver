@@ -67,6 +67,8 @@ enum {
 };
 
 typedef int Move;
+typedef Move MoveList[NMOVES];
+
 static int movesBegin=0;
 static int movesEnd=NMOVES;
 static const int moves[NMOVES][2] = {{0,1}, {-1,0}, {0,-1}, {1,0}, {0,1}, {-1,0}, {0,-1}, {1,0}};
@@ -103,6 +105,9 @@ public:
 	int traceSize();
 	list<Move> trace() const;
 	void showSolution(list<Move> l);
+	// coloca movimentos possíveis em to
+	// retorna quantidade de movimentos possíveis
+	int getPossibleMoves(MoveList &to); 
 
 	friend class lessF;
 
@@ -523,6 +528,17 @@ void State::showSolution(list<Move> solution)
 	cur->print();
 }
 
+int State::getPossibleMoves(MoveList &to)
+{
+	int res = 0;
+	for(int m = movesBegin; m < movesEnd; m++) {
+		if(canMove(m)) {
+			to[res++] = m;
+		}
+	}
+	return res;
+}
+
 double toSeconds(double minutes)
 {
 	return minutes*60;
@@ -534,13 +550,15 @@ list<Move> a_star(State* start)
 	double avgBranchingFactor=0.0;
 	int maxBranchingFactor=0;
 	int minBranchingFactor=9999;
-	int possibleMoves=0;
+	int numPossibleMoves=0;
 	clock_t begin = clock();
 
 	priority_queue<State*, vector<State*>, lessF> open;
 	set<State*, lessBoard> states;
 	open.push(start);
 	states.insert(start);
+	MoveList possibleMoves;
+
 	while(!open.empty()) {
 		if((double)(clock()-begin)/CLOCKS_PER_SEC >= toSeconds(TIME_LIMIT)) { printf("time limit (%.2lf minutes)\n", TIME_LIMIT); exit(0); }
 		State* best = open.top();
@@ -556,60 +574,58 @@ list<Move> a_star(State* start)
 		best->print();
 		sleep(SLEEP_TIME);
 #endif
-		possibleMoves=0;
-		for(int m=movesBegin; m<movesEnd; m++) {
-			if(best->canMove((Move)m)) {
-				possibleMoves++;
-				#ifdef DEBUG
-				printf("canMove! - %s\n", moveStrings[m]);
-				#endif
-				State* child = new State();
-				best->apply(m, child);
+		numPossibleMoves = best->getPossibleMoves(possibleMoves);
+		for(int m = 0; m < numPossibleMoves; m++) {
 
-				if (child->isGoal()) {
-#ifdef DEBUG
-					printf("isGoal()\n");
-					child->print();
-#endif
-					assert(numStatesVisited > 0);
-					double time = (double)(clock() - begin)/CLOCKS_PER_SEC;
-					//printf("%lfs #time elapsed\n%i #total branching\n%lf #average branching\n%d #minimum branching\n%d #maximum branching\n%d #num visited\n%d #puko moves\n%d #box_moves\n", time, (int) avgBranchingFactor, avgBranchingFactor / numStatesVisited, minBranchingFactor, maxBranchingFactor, numStatesVisited, child->puko_moves, child->box_moves);
-					printf("%lf,%i,%lf,%d,%d,%d,%d,%d\n", time, (int) avgBranchingFactor, avgBranchingFactor / numStatesVisited, minBranchingFactor, maxBranchingFactor, numStatesVisited, child->puko_moves, child->box_moves);
-					return child->trace(); //return solution;
-				}
-				set<State*>::iterator cached = states.find(child);
-				if(cached == states.end()) {
-					child->calculateNewF();
-					states.insert(child);
-					open.push(child);
-				} else if((*cached)->g > child->g) {
-					states.erase(cached);
-					child->calculateNewF();
-					states.insert(child);
-					open.push(child);
-				}
+			#ifdef DEBUG
+			printf("canMove! - %s\n", moveStrings[m]);
+			#endif
+			State* child = new State();
+			best->apply(possibleMoves[m], child);
 
+			if (child->isGoal()) {
 #ifdef DEBUG
-				printf("Inserting:\n");
-				if(cached == states.end()) {
-					printf("  new\n");
-				} else {
-					printf("  cached->g: %i, child->g: %i\n", (*cached)->g, child->g);
-				}
+				printf("isGoal()\n");
 				child->print();
 #endif
+				assert(numStatesVisited > 0);
+				double time = (double)(clock() - begin)/CLOCKS_PER_SEC;
+				//printf("%lfs #time elapsed\n%i #total branching\n%lf #average branching\n%d #minimum branching\n%d #maximum branching\n%d #num visited\n%d #puko moves\n%d #box_moves\n", time, (int) avgBranchingFactor, avgBranchingFactor / numStatesVisited, minBranchingFactor, maxBranchingFactor, numStatesVisited, child->puko_moves, child->box_moves);
+				printf("%lf,%i,%lf,%d,%d,%d,%d,%d\n", time, (int) avgBranchingFactor, avgBranchingFactor / numStatesVisited, minBranchingFactor, maxBranchingFactor, numStatesVisited, child->puko_moves, child->box_moves);
+				return child->trace(); //return solution;
+			}
+			set<State*>::iterator cached = states.find(child);
+			if(cached == states.end()) {
+				child->calculateNewF();
+				states.insert(child);
+				open.push(child);
+			} else if((*cached)->g > child->g) {
+				states.erase(cached);
+				child->calculateNewF();
+				states.insert(child);
+				open.push(child);
+			}
 
 #ifdef DEBUG
-				printf("States:\n");
-				for(set<State*>::iterator i = states.begin(); i != states.end(); ++i) {
-					(*i)->print();
-				}
-#endif
+			printf("Inserting:\n");
+			if(cached == states.end()) {
+				printf("  new\n");
+			} else {
+				printf("  cached->g: %i, child->g: %i\n", (*cached)->g, child->g);
 			}
+			child->print();
+#endif
+
+#ifdef DEBUG
+			printf("States:\n");
+			for(set<State*>::iterator i = states.begin(); i != states.end(); ++i) {
+				(*i)->print();
+			}
+#endif
 		}
-		avgBranchingFactor += possibleMoves;
-		minBranchingFactor = min(minBranchingFactor, possibleMoves);
-		maxBranchingFactor = max(maxBranchingFactor, possibleMoves);
+		avgBranchingFactor += numPossibleMoves;
+		minBranchingFactor = min(minBranchingFactor, numPossibleMoves);
+		maxBranchingFactor = max(maxBranchingFactor, numPossibleMoves);
 	}
 	return list<Move>(0, 0);
 }

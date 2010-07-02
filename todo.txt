@@ -25,12 +25,13 @@ idéias novas:
  * usar gprof
  * armazenar só o movimento e ponteiro para o pai no trace DONE (falta testar)
  * usar ponteiros no priority_queue e no set DONE
- * talvez tirar a variável f e usar (g + h) na lessF
+ * talvez tirar a variável f e usar (g + h) na lessF WONTDO
  * usar estimativa para solução com somente n das m>n caixas
  * estar ao mesmo tempo em todo o componente conexo
- * compilar programa sempre com menor potencia de 2 maior que o tamanho do tabuleiro
+ * compilar programa sempre com menor potencia de 2 maior que o tamanho do tabuleiro WONTDO
 
 solução do 01:
  * 127 movimentos do pukoban
  * 50 movimentos de caixas
  * às vezes ele movimenta caixas sem necessidade, tem que tratar isso (execute a solução e verá) DONE
+

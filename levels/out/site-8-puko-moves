@@ -1,8 +1,1 @@
-0.310000s #time elapsed
-60257 #total branching
-2.472589 #average branching
-1 #minimum branching
-5 #maximum branching
-24370 #num visited
-248 #puko moves
-93 #box_moves
+0.200000,60257,2.472589,1,5,24370,248,93
