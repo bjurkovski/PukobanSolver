@@ -67,7 +67,15 @@ enum {
 	NMOVES
 };
 
-typedef int Move;
+
+class Move
+{
+	public:
+		int boxX, boxY, moveIndex;
+		Move() : boxX(0), boxY(0), moveIndex(-1) { };
+		Move(int cx, int cy, int move) : boxX(cx), boxY(cy), moveIndex(move) { };
+};
+
 typedef Move MoveList[MAX_BRANCH];
 typedef bitset<MAX_SIZE * MAX_SIZE> BitBoard;
 
@@ -91,13 +99,13 @@ bool component = false;
 BitBoard gone;
 
 bool isPull(Move m) {
-	return (m >= PULL_UP);
+	return (m.moveIndex >= PULL_UP);
 }
 
 class State
 {
 public:
-	State() : f(0), g(0), h(0), puko_moves(0), box_moves(0), move(-1), pukoX(0), pukoY(0), box(), father(NULL) { };
+	State() : f(0), g(0), h(0), puko_moves(0), box_moves(0), move(Move(0,0,-1)), pukoX(0), pukoY(0), box(), father(NULL) { };
 	void read();
 	void print() const;
 	static Code meaning(char c);
@@ -170,8 +178,8 @@ void State::print() const
 	printf("Path: ");
 	list<Move> tr = trace();
 	for(list<Move>::const_iterator it=tr.begin(); it!=tr.end(); it++) {
-		assert(0 <= *it && *it < NMOVES);
-		printf("%s ", moveStrings[*it]);
+		assert(0 <= it->moveIndex && it->moveIndex < NMOVES);
+		printf("%s ", moveStrings[it->moveIndex]);
 	}
 	printf("\n");
 }
@@ -369,23 +377,23 @@ bool State::isGoal()
 
 bool State::canMove(Move move)
 {
-	int nextX = pukoX + moves[move][X];
-	int nextY = pukoY + moves[move][Y];
+	int nextX = move.boxX/*pukoX*/ + moves[move.moveIndex][X];
+	int nextY = move.boxY/*pukoY*/ + moves[move.moveIndex][Y];
 
 	if(board[nextX][nextY] == WALL)
 		return false;
 
 	if(!isPull(move)) {
 		if(box[INDEX(nextX, nextY)]) {
-			int nextNextX = nextX + moves[move][X];
-			int nextNextY = nextY + moves[move][Y];
+			int nextNextX = nextX + moves[move.moveIndex][X];
+			int nextNextY = nextY + moves[move.moveIndex][Y];
 
 			if(board[nextNextX][nextNextY] == WALL || box[INDEX(nextNextX, nextNextY)])
 				return false;
 		}
 	} else {
-		int boxX = pukoX - moves[move][X];
-		int boxY = pukoY - moves[move][Y];
+		int boxX = move.boxX/*pukoX*/ - moves[move.moveIndex][X];
+		int boxY = move.boxY/*pukoY*/ - moves[move.moveIndex][Y];
 
 		if(!box[INDEX(boxX, boxY)] || box[INDEX(nextX, nextY)])
 			return false;
@@ -396,16 +404,16 @@ bool State::canMove(Move move)
 
 bool State::canMoveBox(Move move, int cx, int cy)
 {
-	int nextX = cx + moves[move][X];
-	int nextY = cy + moves[move][Y];
+	int nextX = move.boxX/*cx*/ + moves[move.moveIndex][X];
+	int nextY = move.boxY/*cy*/ + moves[move.moveIndex][Y];
 
 	if(board[nextX][nextY] == WALL)
 		return false;
 
 	if(!isPull(move)) {
 		if(box[INDEX(nextX, nextY)]) {
-			int nextNextX = nextX + moves[move][X];
-			int nextNextY = nextY + moves[move][Y];
+			int nextNextX = nextX + moves[move.moveIndex][X];
+			int nextNextY = nextY + moves[move.moveIndex][Y];
 
 			if(board[nextNextX][nextNextY] == WALL || box[INDEX(nextNextX, nextNextY)])
 				return false;
@@ -413,8 +421,8 @@ bool State::canMoveBox(Move move, int cx, int cy)
 			return false;
 		}
 	} else {
-		int boxX = cx - moves[move][X];
-		int boxY = cy - moves[move][Y];
+		int boxX = move.boxX/*cx*/ - moves[move.moveIndex][X];
+		int boxY = move.boxY/*cy*/ - moves[move.moveIndex][Y];
 
 		if(!box[INDEX(boxX, boxY)] || box[INDEX(nextX, nextY)])
 			return false;
@@ -426,14 +434,14 @@ bool State::canMoveBox(Move move, int cx, int cy)
 void State::apply(Move move, State* child)
 {
 	*child = *this;
-	int nextX = pukoX + moves[move][X];
-	int nextY = pukoY + moves[move][Y];
+	int nextX = move.boxX/*pukoX*/ + moves[move.moveIndex][X];
+	int nextY = move.boxY/*pukoY*/ + moves[move.moveIndex][Y];
 	bool isBoxMove = false;
 
 	if(!isPull(move)) {
 		if(box[INDEX(nextX, nextY)]) {
-			int nextNextX = nextX + moves[move][X];
-			int nextNextY = nextY + moves[move][Y];
+			int nextNextX = nextX + moves[move.moveIndex][X];
+			int nextNextY = nextY + moves[move.moveIndex][Y];
 
 			child->box[INDEX(nextX, nextY)] = 0;
 			child->box[INDEX(nextNextX, nextNextY)] = 1;
@@ -442,11 +450,11 @@ void State::apply(Move move, State* child)
 		}
 	}
 	else {
-		int boxX = pukoX - moves[move][X];
-		int boxY = pukoY - moves[move][Y];
+		int boxX = move.boxX/*pukoX*/ - moves[move.moveIndex][X];
+		int boxY = move.boxY/*pukoY*/ - moves[move.moveIndex][Y];
 
 		child->box[INDEX(boxX, boxY)] = 0;
-		child->box[INDEX(pukoX, pukoY)] = 1;
+		child->box[INDEX(move.boxX/*pukoX*/, move.boxY/*pukoY*/)] = 1;
 
 		isBoxMove = true;
 	}
@@ -542,7 +550,7 @@ list<Move> State::trace() const
 {
 	list<Move> res;
 	const State *f = this;
-	while(f->move != -1) {
+	while(f->move.moveIndex != -1) {
 		res.push_back(f->move);
 		f = f->father;
 	}
@@ -569,8 +577,8 @@ int State::getPossibleMoves(MoveList &to)
 	if(!component) {
 		int res = 0;
 		for(int m = movesBegin; m < movesEnd; m++) {
-			if(canMove(m)) {
-				to[res++] = m;
+			if(canMove(Move(pukoX,pukoY,m))) {
+				to[res++] = Move(pukoX,pukoY,m);
 			}
 		}
 		return res;
@@ -596,12 +604,12 @@ int State::getPossibleMovesComponent(MoveList &to, int curRes, int cx, int cy)
 				movedFromHere = true;
 				printf("moving from (%i, %i)!\n", cx, cy);
 				for(int m = movesBegin; m < movesEnd; m++) {
-					if(canMoveBox(m, cx, cy)) {
+					if(canMoveBox(Move(cx,cy,m), cx, cy)) {
 						printf("  can move to %s (%i)\n", moveStrings[m], curRes);
-						to[curRes++] = m; //Move(cx, cy, m);
+						to[curRes++] = Move(cx,cy,m); //Move(cx, cy, m);
 					}
 				}
-			} else {
+			} else if (!box[INDEX(nx, ny)]) {
 				curRes = getPossibleMovesComponent(to, curRes, nx, ny);
 			}
 		}
@@ -699,7 +707,7 @@ list<Move> a_star(State* start)
 		maxBranchingFactor = max(maxBranchingFactor, numPossibleMoves);
 	}
 	printf("search ended!\n");
-	return list<Move>(0, 0);
+	return list<Move>(0, Move());
 }
 
 int main(int argc, char **argv)
@@ -707,8 +715,8 @@ int main(int argc, char **argv)
 	setbuf(stdout, NULL);
 
 	State b;
-	if(argc < 3 || argc > 6 || (argc >= 3 && atof(argv[2]) <= 0.001)) {
-		printf("Usage: %s <file_name> <max_time> [push-pull/push-pull] [match/min-distance] [puko-moves/box-moves] [component]\n", argv[0]);
+	if(argc < 3 || argc > 7 || (argc >= 3 && atof(argv[2]) <= 0.001)) {
+		printf("Usage: %s <file_name> <max_time> [push-pull/push-only] [match/min-distance] [puko-moves/box-moves] [component]\n", argv[0]);
 		printf("Default: push-pull match puko-moves\n");
 		exit(1);
 	}
@@ -745,7 +753,7 @@ int main(int argc, char **argv)
 	printf("Solution:\n");
 	int i = 0;
 	for(list<Move>::iterator it=solution.begin(); it!=solution.end(); it++)
-		printf("%i: %s\n", i++, moveStrings[*it]);
+		printf("%i: %s\n", i++, moveStrings[it->moveIndex]);
 	printf("\n");
 	b.showSolution(solution);
 #endif

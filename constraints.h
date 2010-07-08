@@ -2,6 +2,6 @@
 #define __CONSTRAINTS_H__
 
 #define MAX_TARGET 40
-#define DEBUG
+//#define DEBUG
 
 #endif
