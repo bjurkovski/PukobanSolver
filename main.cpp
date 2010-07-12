@@ -602,10 +602,10 @@ int State::getPossibleMovesComponent(MoveList &to, int curRes, int cx, int cy)
 		if(!gone[INDEX(nx, ny)] && board[nx][ny] != WALL) {
 			if(box[INDEX(nx, ny)] && !movedFromHere) {
 				movedFromHere = true;
-				printf("moving from (%i, %i)!\n", cx, cy);
+				//printf("moving from (%i, %i)!\n", cx, cy);
 				for(int m = movesBegin; m < movesEnd; m++) {
 					if(canMoveBox(Move(cx,cy,m), cx, cy)) {
-						printf("  can move to %s (%i)\n", moveStrings[m], curRes);
+						//printf("  can move to %s (%i)\n", moveStrings[m], curRes);
 						to[curRes++] = Move(cx,cy,m); //Move(cx, cy, m);
 					}
 				}
@@ -615,7 +615,7 @@ int State::getPossibleMovesComponent(MoveList &to, int curRes, int cx, int cy)
 		}
 	}
 
-	return 0;
+	return curRes; //0;
 }
 
 double toSeconds(double minutes)
@@ -654,6 +654,7 @@ list<Move> a_star(State* start)
 		sleep(SLEEP_TIME);
 #endif
 		numPossibleMoves = best->getPossibleMoves(possibleMoves);
+		printf("num moves: %d\n", numPossibleMoves);
 		for(int m = 0; m < numPossibleMoves; m++) {
 
 			#ifdef DEBUG
@@ -749,14 +750,14 @@ int main(int argc, char **argv)
 	}
 			
 	list<Move> solution = a_star(&b);
-#ifdef DEBUG 
+//#ifdef DEBUG 
 	printf("Solution:\n");
 	int i = 0;
 	for(list<Move>::iterator it=solution.begin(); it!=solution.end(); it++)
 		printf("%i: %s\n", i++, moveStrings[it->moveIndex]);
 	printf("\n");
 	b.showSolution(solution);
-#endif
+//#endif
 	return 0;
 }
 
