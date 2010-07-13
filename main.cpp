@@ -668,7 +668,7 @@ list<Move> a_star(State* start)
 		sleep(SLEEP_TIME);
 #endif
 		numPossibleMoves = best->getPossibleMoves(possibleMoves);
-		printf("num moves: %d\n", numPossibleMoves);
+		//printf("num moves: %d\n", numPossibleMoves);
 		for(int m = 0; m < numPossibleMoves; m++) {
 
 			#ifdef DEBUG
@@ -765,14 +765,14 @@ int main(int argc, char **argv)
 	}
 			
 	list<Move> solution = a_star(&b);
-//#ifdef DEBUG 
+#ifdef DEBUG 
 	printf("Solution:\n");
 	int i = 0;
 	for(list<Move>::iterator it=solution.begin(); it!=solution.end(); it++)
 		printf("%i: %s\n", i++, moveStrings[it->moveIndex]);
 	printf("\n");
 	b.showSolution(solution);
-//#endif
+#endif
 	return 0;
 }
 
