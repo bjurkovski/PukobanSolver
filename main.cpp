@@ -74,6 +74,7 @@ class Move
 		int boxX, boxY, moveIndex;
 		Move() : boxX(0), boxY(0), moveIndex(-1) { };
 		Move(int cx, int cy, int move) : boxX(cx), boxY(cy), moveIndex(move) { };
+		friend ostream& operator<<(ostream& out, const Move& m);
 };
 
 typedef Move MoveList[MAX_BRANCH];
@@ -84,6 +85,12 @@ static int movesEnd=NMOVES;
 static const int moves[NMOVES][2] = {{0,1}, {-1,0}, {0,-1}, {1,0}, {0,1}, {-1,0}, {0,-1}, {1,0}};
 static const char moveStrings[NMOVES][30] = {"Going right", "Going up", "Going left", "Going down",
 											  "Pulling right", "Pulling up", "Pulling left", "Pulling down"};
+
+ostream& operator<<(ostream& out, const Move& m)
+{
+	out << moveStrings[m.moveIndex] << "(" << m.boxX << ", " << m.boxY << ")";
+	return out;
+}
 
 static enum Heuristic {
 	MIN_DISTANCE,
@@ -179,7 +186,8 @@ void State::print() const
 	list<Move> tr = trace();
 	for(list<Move>::const_iterator it=tr.begin(); it!=tr.end(); it++) {
 		assert(0 <= it->moveIndex && it->moveIndex < NMOVES);
-		printf("%s ", moveStrings[it->moveIndex]);
+		//printf("%s ", moveStrings[it->moveIndex]);
+		cout << *it << " ";
 	}
 	printf("\n");
 }
@@ -591,7 +599,9 @@ int State::getPossibleMoves(MoveList &to)
 
 int State::getPossibleMovesComponent(MoveList &to, int curRes, int cx, int cy)
 {
+#ifdef DEBUG
 	printf("%s(%i, %i, %i)\n", __FUNCTION__, curRes, cx, cy);
+#endif
 
 	gone[INDEX(cx, cy)] = 1;
 
@@ -602,10 +612,14 @@ int State::getPossibleMovesComponent(MoveList &to, int curRes, int cx, int cy)
 		if(!gone[INDEX(nx, ny)] && board[nx][ny] != WALL) {
 			if(box[INDEX(nx, ny)] && !movedFromHere) {
 				movedFromHere = true;
-				//printf("moving from (%i, %i)!\n", cx, cy);
+#ifdef DEBUG
+				printf("moving from (%i, %i)!\n", cx, cy);
+#endif
 				for(int m = movesBegin; m < movesEnd; m++) {
 					if(canMoveBox(Move(cx,cy,m), cx, cy)) {
-						//printf("  can move to %s (%i)\n", moveStrings[m], curRes);
+#ifdef DEBUG
+						printf("  can move to %s (%i)\n", moveStrings[m], curRes);
+#endif
 						to[curRes++] = Move(cx,cy,m); //Move(cx, cy, m);
 					}
 				}
@@ -658,7 +672,8 @@ list<Move> a_star(State* start)
 		for(int m = 0; m < numPossibleMoves; m++) {
 
 			#ifdef DEBUG
-			printf("canMove! - %s\n", moveStrings[m]);
+			printf("canMove!");
+			cout << possibleMoves[m];
 			#endif
 			State* child = new State();
 			best->apply(possibleMoves[m], child);
