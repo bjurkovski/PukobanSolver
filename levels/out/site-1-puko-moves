@@ -1,1 +1,4 @@
-0.000000,3684,3.590643,1,7,1026,48,48
+getPossibleMovesComponent(0, 1, 3)
+moving from (1, 3)!
+  can move to Going left (0)
+search ended!

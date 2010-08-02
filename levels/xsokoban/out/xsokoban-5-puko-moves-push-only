@@ -1,0 +1,27 @@
+getPossibleMovesComponent(0, 8, 15)
+getPossibleMovesComponent(0, 8, 14)
+getPossibleMovesComponent(0, 7, 14)
+moving from (7, 14)!
+  can move to Going up (0)
+moving from (8, 14)!
+  can move to Going left (0)
+getPossibleMovesComponent(1, 9, 14)
+getPossibleMovesComponent(1, 9, 13)
+moving from (9, 13)!
+  can move to Going left (1)
+getPossibleMovesComponent(0, 10, 14)
+getPossibleMovesComponent(0, 10, 15)
+getPossibleMovesComponent(0, 11, 15)
+getPossibleMovesComponent(0, 12, 15)
+getPossibleMovesComponent(0, 12, 14)
+getPossibleMovesComponent(0, 12, 13)
+getPossibleMovesComponent(0, 12, 12)
+getPossibleMovesComponent(0, 11, 12)
+getPossibleMovesComponent(0, 10, 12)
+moving from (10, 12)!
+  can move to Going right (0)
+  can move to Going up (1)
+  can move to Going left (2)
+moving from (10, 14)!
+  can move to Going left (0)
+search ended!

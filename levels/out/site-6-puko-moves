@@ -1,1 +1,12 @@
-0.460000,109921,3.919311,1,8,28046,80,80
+getPossibleMovesComponent(0, 5, 4)
+getPossibleMovesComponent(0, 4, 4)
+getPossibleMovesComponent(0, 3, 4)
+getPossibleMovesComponent(0, 2, 4)
+moving from (2, 4)!
+getPossibleMovesComponent(0, 4, 3)
+moving from (4, 3)!
+  can move to Pulling right (0)
+getPossibleMovesComponent(1, 5, 3)
+getPossibleMovesComponent(1, 5, 2)
+moving from (5, 2)!
+search ended!

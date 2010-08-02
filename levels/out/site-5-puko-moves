@@ -1,1 +1,17 @@
-0.020000,7435,3.621529,1,7,2053,59,59
+getPossibleMovesComponent(0, 5, 3)
+getPossibleMovesComponent(0, 4, 3)
+getPossibleMovesComponent(0, 3, 3)
+moving from (3, 3)!
+getPossibleMovesComponent(0, 2, 3)
+getPossibleMovesComponent(0, 2, 4)
+moving from (2, 4)!
+getPossibleMovesComponent(0, 1, 3)
+moving from (1, 3)!
+getPossibleMovesComponent(0, 4, 2)
+getPossibleMovesComponent(0, 4, 1)
+getPossibleMovesComponent(0, 3, 1)
+moving from (3, 1)!
+  can move to Pulling down (0)
+getPossibleMovesComponent(0, 5, 1)
+getPossibleMovesComponent(0, 5, 2)
+search ended!

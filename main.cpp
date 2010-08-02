@@ -103,7 +103,7 @@ static enum Criteria {
 } criteria = PUKO_MOVES;
 
 bool component = false;
-BitBoard gone;
+BitBoard visited;
 
 bool isPull(Move m) {
 	return (m.moveIndex >= PULL_UP);
@@ -591,7 +591,7 @@ int State::getPossibleMoves(MoveList &to)
 		}
 		return res;
 	} else {
-		gone.reset();
+		visited.reset();
 		//TODO to virar global, para não ficar passando
 		return getPossibleMovesComponent(to, 0, pukoX, pukoY);
 	}
@@ -603,13 +603,15 @@ int State::getPossibleMovesComponent(MoveList &to, int curRes, int cx, int cy)
 	printf("%s(%i, %i, %i)\n", __FUNCTION__, curRes, cx, cy);
 #endif
 
-	gone[INDEX(cx, cy)] = 1;
+	visited[INDEX(cx, cy)] = 1;
 
 	bool movedFromHere = false;
-	for(int d = 0; d < 4; d++) {
-		int nx = cx + moves[d][0],
-				ny = cy + moves[d][1];
-		if(!gone[INDEX(nx, ny)] && board[nx][ny] != WALL) {
+	for(int d = 0; d < 4; d++)
+	{
+		int nx = cx + moves[d][0];
+		int ny = cy + moves[d][1];
+				
+		if(!visited[INDEX(nx, ny)] && board[nx][ny] != WALL) {
 			if(box[INDEX(nx, ny)] && !movedFromHere) {
 				movedFromHere = true;
 #ifdef DEBUG
@@ -620,7 +622,7 @@ int State::getPossibleMovesComponent(MoveList &to, int curRes, int cx, int cy)
 #ifdef DEBUG
 						printf("  can move to %s (%i)\n", moveStrings[m], curRes);
 #endif
-						to[curRes++] = Move(cx,cy,m); //Move(cx, cy, m);
+						to[curRes++] = Move(cx,cy,m);
 					}
 				}
 			} else if (!box[INDEX(nx, ny)]) {
@@ -722,7 +724,7 @@ list<Move> a_star(State* start)
 		minBranchingFactor = min(minBranchingFactor, numPossibleMoves);
 		maxBranchingFactor = max(maxBranchingFactor, numPossibleMoves);
 	}
-	printf("search ended!\n");
+	printf("search ended with no solution!\n");
 	return list<Move>(0, Move());
 }
 

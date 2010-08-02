@@ -1,5 +1,5 @@
 #!/bin/bash
-time=1.0
+time=10.0
 for i in {1..90}
 do
 	echo "Running levels/xsokoban/$i.txt..."

@@ -1,2 +1,79 @@
-Usage: ./solver <file_name> <max_time> [push-pull/push-pull] [match/min-distance] [puko-moves/box-moves]
-Default: push-pull match puko-moves
+getPossibleMovesComponent(0, 11, 12)
+getPossibleMovesComponent(0, 11, 13)
+getPossibleMovesComponent(0, 11, 14)
+getPossibleMovesComponent(0, 11, 15)
+getPossibleMovesComponent(0, 11, 16)
+getPossibleMovesComponent(0, 11, 17)
+getPossibleMovesComponent(0, 11, 18)
+getPossibleMovesComponent(0, 11, 19)
+getPossibleMovesComponent(0, 10, 19)
+getPossibleMovesComponent(0, 9, 19)
+getPossibleMovesComponent(0, 9, 18)
+getPossibleMovesComponent(0, 8, 18)
+getPossibleMovesComponent(0, 7, 18)
+getPossibleMovesComponent(0, 7, 19)
+getPossibleMovesComponent(0, 6, 19)
+getPossibleMovesComponent(0, 5, 19)
+getPossibleMovesComponent(0, 4, 19)
+getPossibleMovesComponent(0, 3, 19)
+moving from (3, 19)!
+  can move to Going left (0)
+getPossibleMovesComponent(0, 4, 18)
+moving from (4, 18)!
+  can move to Going up (0)
+  can move to Going left (1)
+  can move to Going down (2)
+moving from (5, 19)!
+  can move to Going left (0)
+getPossibleMovesComponent(0, 6, 18)
+moving from (6, 18)!
+  can move to Going up (0)
+getPossibleMovesComponent(1, 6, 17)
+getPossibleMovesComponent(1, 5, 17)
+moving from (5, 17)!
+  can move to Going right (1)
+  can move to Going up (2)
+getPossibleMovesComponent(3, 5, 16)
+getPossibleMovesComponent(3, 4, 16)
+moving from (4, 16)!
+  can move to Going right (3)
+getPossibleMovesComponent(4, 3, 16)
+getPossibleMovesComponent(4, 3, 17)
+moving from (3, 17)!
+  can move to Going right (4)
+  can move to Going down (5)
+getPossibleMovesComponent(6, 2, 17)
+getPossibleMovesComponent(6, 2, 18)
+moving from (2, 18)!
+  can move to Going down (6)
+getPossibleMovesComponent(0, 2, 16)
+moving from (3, 16)!
+  can move to Going left (0)
+getPossibleMovesComponent(0, 5, 15)
+getPossibleMovesComponent(0, 6, 15)
+moving from (6, 15)!
+  can move to Going right (0)
+getPossibleMovesComponent(1, 7, 15)
+getPossibleMovesComponent(1, 7, 16)
+getPossibleMovesComponent(1, 7, 17)
+moving from (7, 16)!
+  can move to Going up (0)
+getPossibleMovesComponent(0, 7, 14)
+getPossibleMovesComponent(0, 7, 13)
+getPossibleMovesComponent(0, 8, 13)
+getPossibleMovesComponent(0, 8, 14)
+getPossibleMovesComponent(0, 9, 14)
+getPossibleMovesComponent(0, 9, 13)
+getPossibleMovesComponent(0, 10, 13)
+getPossibleMovesComponent(0, 10, 14)
+getPossibleMovesComponent(0, 10, 15)
+getPossibleMovesComponent(0, 10, 16)
+getPossibleMovesComponent(0, 10, 17)
+getPossibleMovesComponent(0, 10, 18)
+getPossibleMovesComponent(0, 9, 17)
+getPossibleMovesComponent(0, 9, 16)
+moving from (5, 16)!
+  can move to Going down (0)
+moving from (6, 17)!
+  can move to Going left (0)
+search ended!

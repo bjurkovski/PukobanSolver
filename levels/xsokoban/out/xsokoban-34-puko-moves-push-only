@@ -1,2 +1,10 @@
-Usage: ./solver <file_name> <max_time> [push-pull/push-pull] [match/min-distance] [puko-moves/box-moves]
-Default: push-pull match puko-moves
+getPossibleMovesComponent(0, 4, 11)
+getPossibleMovesComponent(0, 4, 10)
+getPossibleMovesComponent(0, 3, 10)
+moving from (3, 10)!
+  can move to Going left (0)
+getPossibleMovesComponent(0, 5, 11)
+getPossibleMovesComponent(0, 5, 12)
+moving from (5, 12)!
+  can move to Going down (0)
+search ended!

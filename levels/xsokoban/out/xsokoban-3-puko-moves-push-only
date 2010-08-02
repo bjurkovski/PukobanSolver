@@ -1,1 +1,18 @@
-time limit (0.10 minutes)
+getPossibleMovesComponent(0, 2, 15)
+getPossibleMovesComponent(0, 2, 14)
+getPossibleMovesComponent(0, 2, 13)
+getPossibleMovesComponent(0, 2, 12)
+getPossibleMovesComponent(0, 2, 11)
+getPossibleMovesComponent(0, 2, 10)
+getPossibleMovesComponent(0, 3, 10)
+moving from (3, 10)!
+getPossibleMovesComponent(0, 4, 10)
+moving from (4, 10)!
+  can move to Going right (0)
+moving from (2, 11)!
+moving from (2, 13)!
+  can move to Going down (0)
+getPossibleMovesComponent(0, 3, 14)
+moving from (3, 14)!
+  can move to Going down (0)
+search ended!

@@ -1,1 +1,13 @@
-0.260000,61196,3.930631,1,9,15569,85,85
+getPossibleMovesComponent(0, 5, 4)
+getPossibleMovesComponent(0, 4, 4)
+getPossibleMovesComponent(0, 3, 4)
+getPossibleMovesComponent(0, 2, 4)
+getPossibleMovesComponent(0, 1, 4)
+moving from (1, 4)!
+  can move to Going left (0)
+moving from (2, 4)!
+  can move to Going left (0)
+moving from (3, 4)!
+moving from (4, 4)!
+moving from (5, 4)!
+search ended!
